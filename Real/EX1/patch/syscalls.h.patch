@@ -1,0 +1,11 @@
+--- ./linux-5.4.155-bak/include/linux/syscalls.h	2021-10-22 08:55:18.836826352 +0800
++++ ./linux-5.4.155/include/linux/syscalls.h	2021-11-02 11:32:23.228331390 +0800
+@@ -1222,6 +1222,8 @@
+  */
+ asmlinkage long sys_ni_syscall(void);
+ 
++asmlinkage long sys_mysyscall(uint8_t __user * data, uint32_t len);
++
+ #endif /* CONFIG_ARCH_HAS_SYSCALL_WRAPPER */
+ 
+ 

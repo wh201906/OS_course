@@ -1,0 +1,157 @@
+--- ./linux-5.4.155-bak/kernel/sys.c	2021-10-22 08:55:19.028922361 +0800
++++ ./linux-5.4.155/kernel/sys.c	2021-11-02 15:09:31.240997225 +0800
+@@ -2579,6 +2579,154 @@
+ 	return 0;
+ }
+ 
++// in linux-5.4.155, use new_utsname rather than utsname
++SYSCALL_DEFINE2(sys_mysyscall, uint8_t __user *, data, uint32_t, len)
++{
++	uint8_t userData[2048];
++	uint32_t i;
++
++	printk("Calling sys_mysyscall(0x%x, %u)", data, len);
++
++	if(len == 0)
++	{
++		printk("Nothing happened\n");
++		return 0;
++	}
++	else if(len > 2046) // userData[2047] will not be use
++	{
++		printk("Data is too big!\n");
++		return -EFAULT;
++	}
++	else if(copy_from_user(userData, data, len))
++	{
++		printk("Failed to get data from 0x%x\n", data);
++		return -EFAULT;	
++	}
++
++	// protect
++	for(i = len; i < 2048; i++)
++	{
++		userData[i] = 0x0;
++	}
++
++	if(userData[0] == 0) // print something
++	{
++		printk("Hello from sys_mysyscall()!\n");
++	}
++	else if(userData[0] == 1) // print a string
++	{
++		printk("%s", (char*)(userData + 1));
++	}
++	else if(userData[0] == 2) // get the nice value of a task
++	{
++		pid_t targetPIDNum;
++		struct pid* targetPID;
++		struct task_struct* targetTask;
++		int nice, prio;
++
++		targetPIDNum = *(pid_t*)(userData + 1);
++		targetPID = find_get_pid(targetPIDNum);
++		targetTask = pid_task(targetPID, PIDTYPE_PID);
++
++		nice = task_nice(targetTask);
++		prio = task_prio(targetTask);
++		printk("Process Info:\nPID: %d, nice: %d, prio: %d\n", targetPIDNum, nice, prio);
++
++		if(copy_to_user((int*)data, &nice, sizeof(nice)))
++			return -EFAULT;
++		if(copy_to_user((int*)(data + 8), &prio, sizeof(prio)))
++			return -EFAULT;
++	}
++	else if(userData[0] == 3) // set the nice value of a task
++	{
++		pid_t targetPIDNum;
++		struct pid* targetPID;
++		struct task_struct* targetTask;
++		int oldNice, oldPrio, newNice, newPrio;
++
++		targetPIDNum = *(pid_t*)(userData + 1);
++		newNice = *(int*)(userData + 9);
++		targetPID = find_get_pid(targetPIDNum);
++		targetTask = pid_task(targetPID, PIDTYPE_PID);
++
++		oldNice = task_nice(targetTask);
++		oldPrio = task_prio(targetTask);
++		printk("Old Process Info:\nPID: %d, nice: %d, prio: %d\n", targetPIDNum, oldNice, oldPrio);
++		printk("New nice to be set: %d\n", newNice);
++
++		set_user_nice(targetTask, newNice);
++		newNice = task_nice(targetTask);
++		newPrio = task_prio(targetTask);
++		printk("New Process Info:\nPID: %d, nice: %d, prio: %d\n", targetPIDNum, newNice, newPrio);
++
++		if(copy_to_user((int*)data, &oldNice, sizeof(oldNice)))
++			return -EFAULT;
++		if(copy_to_user((int*)(data + 8), &oldPrio, sizeof(oldPrio)))
++			return -EFAULT;
++		if(copy_to_user((int*)(data + 16), &newNice, sizeof(newNice)))
++			return -EFAULT;
++		if(copy_to_user((int*)(data + 24), &newPrio, sizeof(newPrio)))
++			return -EFAULT;
++	}
++	// the hostname is less than 256 in normal cases
++	else if(userData[0] == 4) // get hostname
++	{
++		// copied from SYSCALL_DEFINE2(gethostname, char __user *, name, int, len)
++		struct new_utsname* info;
++		down_read(&uts_sem);
++		info = utsname();
++		i = 1 + strlen(info->nodename);
++		if(i > 512)
++			i = 512;
++		memcpy((char*)userData, info->nodename, i);
++		up_read(&uts_sem);
++		userData[i] = '\0';
++		printk("Current Hostname: %s\n", (char*)userData);
++		if(copy_to_user((char*)data, userData, i))
++			return -EFAULT;
++	}
++	else if(userData[0] == 5) // set hostname
++	{
++		// copied from SYSCALL_DEFINE2(sethostname, char __user *, name, int, len)
++		uint32_t len = 0;
++
++		if (!ns_capable(current->nsproxy->uts_ns->user_ns, CAP_SYS_ADMIN))
++		return -EPERM;
++
++		while(userData[len + 1] != '\0')
++		{
++			len++;
++		}
++		if (len < 0 || len > __NEW_UTS_LEN)
++			return -EINVAL;
++
++		printk("Hostname to be set: %s\nLength: %u\n", userData + 1, len);
++
++		struct new_utsname *info;
++
++		down_write(&uts_sem);
++		info = utsname();
++		memcpy(info->nodename, (char*)(userData + 1), len);
++		memset(info->nodename + len, 0, sizeof(info->nodename) - len);
++		uts_proc_notify(UTS_PROC_HOSTNAME);
++		up_write(&uts_sem);
++	}
++	else if(userData[0] == 6) // get kernel info
++	{
++		struct new_utsname* info;
++		down_read(&uts_sem);
++		info = utsname();
++		printk("System Name: %s\n", info->sysname);
++		printk("Node Name: %s\n", info->nodename);
++		printk("Release: %s\n", info->release);
++		printk("Version: %s\n", info->version);
++		printk("Machine: %s\n", info->machine);
++		copy_to_user((struct new_utsname*)data, info, sizeof(struct new_utsname));
++		up_read(&uts_sem);
++	}
++	return 0;
++}
++
+ #ifdef CONFIG_COMPAT
+ struct compat_sysinfo {
+ 	s32 uptime;
