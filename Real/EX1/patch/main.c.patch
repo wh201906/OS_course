@@ -1,0 +1,13 @@
+--- linux-5.4.155-bak/init/main.c	2021-10-22 08:55:19.016916361 +0800
++++ linux-5.4.155/init/main.c	2021-11-12 02:14:32.343924746 +0800
+@@ -780,6 +780,10 @@
+ 	acpi_subsystem_init();
+ 	arch_post_acpi_subsys_init();
+ 	sfi_init_late();
++	printk("Hello from wh201906\n");
++	// Don't call the customized printk() 
++	// after arch_call_rest_init().
++	// Otherwise, the content will not be shown(switched to user mode?)
+ 
+ 	/* Do the rest non-__init'ed, we're now alive */
+ 	arch_call_rest_init();
