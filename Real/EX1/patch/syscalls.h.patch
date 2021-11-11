@@ -1,11 +1,10 @@
---- ./linux-5.4.155-bak/include/linux/syscalls.h	2021-10-22 08:55:18.836826352 +0800
-+++ ./linux-5.4.155/include/linux/syscalls.h	2021-11-02 11:32:23.228331390 +0800
-@@ -1222,6 +1222,8 @@
-  */
- asmlinkage long sys_ni_syscall(void);
- 
+--- linux-5.4.155-bak/include/linux/syscalls.h	2021-10-22 08:55:18.836826352 +0800
++++ linux-5.4.155/include/linux/syscalls.h	2021-11-02 23:29:44.339921724 +0800
+@@ -730,6 +730,7 @@
+ asmlinkage long sys_prctl(int option, unsigned long arg2, unsigned long arg3,
+ 			unsigned long arg4, unsigned long arg5);
+ asmlinkage long sys_getcpu(unsigned __user *cpu, unsigned __user *node, struct getcpu_cache __user *cache);
 +asmlinkage long sys_mysyscall(uint8_t __user * data, uint32_t len);
-+
- #endif /* CONFIG_ARCH_HAS_SYSCALL_WRAPPER */
  
- 
+ /* kernel/time.c */
+ asmlinkage long sys_gettimeofday(struct timeval __user *tv,

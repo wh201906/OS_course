@@ -1,10 +1,14 @@
---- ./linux-5.4.155-bak/arch/x86/entry/syscalls/syscall_64.tbl	2021-10-22 08:55:16.131474221 +0800
-+++ ./linux-5.4.155/arch/x86/entry/syscalls/syscall_64.tbl	2021-10-29 15:16:21.226020831 +0800
-@@ -357,6 +357,7 @@
+--- linux-5.4.155-bak/arch/x86/entry/syscalls/syscall_64.tbl	2021-10-22 08:55:16.131474221 +0800
++++ linux-5.4.155/arch/x86/entry/syscalls/syscall_64.tbl	2021-11-02 23:29:49.427921997 +0800
+@@ -357,6 +357,11 @@
  433	common	fspick			__x64_sys_fspick
  434	common	pidfd_open		__x64_sys_pidfd_open
  435	common	clone3			__x64_sys_clone3/ptregs
-+436 common  mysyscall       sys_mysyscall
++436 common  mysyscall       __x64_sys_mysyscall
++
++# "436 common  mysyscall       sys_mysyscall" doesn't work from Linux kernel v4.17
++# see https://stackoverflow.com/questions/54840772/
++# and commit d5a0052 in linux kernel code
  
  #
  # x32-specific system call numbers start at 512 to avoid cache impact

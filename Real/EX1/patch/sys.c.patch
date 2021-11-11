@@ -1,16 +1,16 @@
---- ./linux-5.4.155-bak/kernel/sys.c	2021-10-22 08:55:19.028922361 +0800
-+++ ./linux-5.4.155/kernel/sys.c	2021-11-02 15:09:31.240997225 +0800
+--- linux-5.4.155-bak/kernel/sys.c	2021-10-22 08:55:19.028922361 +0800
++++ linux-5.4.155/kernel/sys.c	2021-11-02 23:29:41.067921548 +0800
 @@ -2579,6 +2579,154 @@
  	return 0;
  }
  
 +// in linux-5.4.155, use new_utsname rather than utsname
-+SYSCALL_DEFINE2(sys_mysyscall, uint8_t __user *, data, uint32_t, len)
++SYSCALL_DEFINE2(mysyscall, uint8_t __user *, data, uint32_t, len)
 +{
 +	uint8_t userData[2048];
 +	uint32_t i;
 +
-+	printk("Calling sys_mysyscall(0x%x, %u)", data, len);
++	printk("Calling mysyscall(0x%x, %u)", data, len);
 +
 +	if(len == 0)
 +	{
@@ -36,7 +36,7 @@
 +
 +	if(userData[0] == 0) // print something
 +	{
-+		printk("Hello from sys_mysyscall()!\n");
++		printk("Hello from mysyscall()!\n");
 +	}
 +	else if(userData[0] == 1) // print a string
 +	{

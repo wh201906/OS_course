@@ -1,10 +1,9 @@
 # Compile config
 ```
-Networking support->
-Amateur Radio support[x]
-CAN bus subsystem support[x]
-Bluetooth subsystem support[x]
-NFC subsystem support[x]
+Power management and ACPI options->
+ACPI (Advanced Configuration and Power Interface) Support[x]
+
+Networking support[x](reduce a lot of time)
 
 Device Drivers->
 GNSS Receiver support[x]
@@ -20,6 +19,9 @@ Industrial I/O support[x]
 Thunderbolt support[x]
 Android->Android Drivers[x]
 FPGA Configuration Framework[x]
+Graphics support->
+Direct Rendering Manager[x](reduce a lot of time)
+DRM Support for Xen guest OS[x]
 
 File systems->
 Reiserfs support[x]
@@ -42,3 +44,10 @@ Additional X.509 keys for default system keyring(clear)
 linux-5.4.155/arch/x86/entry/syscalls/syscall_64.tbl  
 linux-5.4.155/include/linux/syscalls.h  
 linux-5.4.155/kernel/sys.c  
+
+# tips
+make -j5  
+make install  
+make modules_install  
+update-initramfs  
+update-grub  
