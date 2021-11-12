@@ -1,6 +1,6 @@
 --- linux-5.4.155-bak/kernel/sys.c	2021-10-22 08:55:19.028922361 +0800
-+++ linux-5.4.155/kernel/sys.c	2021-11-02 23:29:41.067921548 +0800
-@@ -2579,6 +2579,154 @@
++++ linux-5.4.155/kernel/sys.c	2021-11-12 09:35:10.357488351 +0800
+@@ -2579,6 +2579,195 @@
  	return 0;
  }
  
@@ -51,6 +51,11 @@
 +
 +		targetPIDNum = *(pid_t*)(userData + 1);
 +		targetPID = find_get_pid(targetPIDNum);
++		if(targetPID == NULL)
++		{
++			printk("Process not found!\n");
++			return -EFAULT;
++		}
 +		targetTask = pid_task(targetPID, PIDTYPE_PID);
 +
 +		nice = task_nice(targetTask);
@@ -58,9 +63,15 @@
 +		printk("Process Info:\nPID: %d, nice: %d, prio: %d\n", targetPIDNum, nice, prio);
 +
 +		if(copy_to_user((int*)data, &nice, sizeof(nice)))
++		{
++			printk("Error when calling copy_to_user()!\n");
 +			return -EFAULT;
++		}
 +		if(copy_to_user((int*)(data + 8), &prio, sizeof(prio)))
++		{
++			printk("Error when calling copy_to_user()!\n");
 +			return -EFAULT;
++		}
 +	}
 +	else if(userData[0] == 3) // set the nice value of a task
 +	{
@@ -72,6 +83,11 @@
 +		targetPIDNum = *(pid_t*)(userData + 1);
 +		newNice = *(int*)(userData + 9);
 +		targetPID = find_get_pid(targetPIDNum);
++		if(targetPID == NULL)
++		{
++			printk("Process not found!\n");
++			return -EFAULT;
++		}
 +		targetTask = pid_task(targetPID, PIDTYPE_PID);
 +
 +		oldNice = task_nice(targetTask);
@@ -85,13 +101,25 @@
 +		printk("New Process Info:\nPID: %d, nice: %d, prio: %d\n", targetPIDNum, newNice, newPrio);
 +
 +		if(copy_to_user((int*)data, &oldNice, sizeof(oldNice)))
++		{
++			printk("Error when calling copy_to_user()!\n");
 +			return -EFAULT;
++		}
 +		if(copy_to_user((int*)(data + 8), &oldPrio, sizeof(oldPrio)))
++		{
++			printk("Error when calling copy_to_user()!\n");
 +			return -EFAULT;
++		}
 +		if(copy_to_user((int*)(data + 16), &newNice, sizeof(newNice)))
++		{
++			printk("Error when calling copy_to_user()!\n");
 +			return -EFAULT;
++		}
 +		if(copy_to_user((int*)(data + 24), &newPrio, sizeof(newPrio)))
++		{
++			printk("Error when calling copy_to_user()!\n");
 +			return -EFAULT;
++		}
 +	}
 +	// the hostname is less than 256 in normal cases
 +	else if(userData[0] == 4) // get hostname
@@ -108,26 +136,35 @@
 +		userData[i] = '\0';
 +		printk("Current Hostname: %s\n", (char*)userData);
 +		if(copy_to_user((char*)data, userData, i))
++		{
++			printk("Error when calling copy_to_user()!\n");
 +			return -EFAULT;
++		}
 +	}
 +	else if(userData[0] == 5) // set hostname
 +	{
 +		// copied from SYSCALL_DEFINE2(sethostname, char __user *, name, int, len)
 +		uint32_t len = 0;
++		struct new_utsname *info;
 +
 +		if (!ns_capable(current->nsproxy->uts_ns->user_ns, CAP_SYS_ADMIN))
-+		return -EPERM;
++		{
++			printk("Not permitted! Try running as root?\n");
++			return -EPERM;
++		}
++		
 +
 +		while(userData[len + 1] != '\0')
 +		{
 +			len++;
 +		}
 +		if (len < 0 || len > __NEW_UTS_LEN)
++		{
++			printk("Hostname length invalid!\n");
 +			return -EINVAL;
++		}
 +
 +		printk("Hostname to be set: %s\nLength: %u\n", userData + 1, len);
-+
-+		struct new_utsname *info;
 +
 +		down_write(&uts_sem);
 +		info = utsname();
@@ -146,7 +183,11 @@
 +		printk("Release: %s\n", info->release);
 +		printk("Version: %s\n", info->version);
 +		printk("Machine: %s\n", info->machine);
-+		copy_to_user((struct new_utsname*)data, info, sizeof(struct new_utsname));
++		if(copy_to_user((struct new_utsname*)data, info, sizeof(struct new_utsname)))
++		{
++			printk("Error when calling copy_to_user()!\n");
++			return -EFAULT;
++		}
 +		up_read(&uts_sem);
 +	}
 +	return 0;
