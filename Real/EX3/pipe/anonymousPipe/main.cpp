@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
     if(argc > 1)
     {
         sscanf(argv[1], "%d", &childNum);
-        if(childNum < 1 || childNum > 128)
+        if(childNum < 1 || childNum > 64)
             childNum = CHILD_NUM;
     }
 
