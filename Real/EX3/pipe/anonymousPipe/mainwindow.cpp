@@ -37,6 +37,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(runningTimer, &QTimer::timeout, this, &MainWindow::onTimeout);
 
     runningTimer->start(500);
+    on_childMutexBox_clicked(ui->childMutexBox->isChecked());
+    on_pipeWMutexBox_clicked(ui->pipeWMutexBox->isChecked());
 }
 
 MainWindow::~MainWindow()
@@ -58,11 +60,15 @@ void MainWindow::setId(int id)
         ui->dataEdit->setReadOnly(true);
         ui->writeWidget->setVisible(false);
         ui->writeButton->setVisible(false);
+        ui->pipeWMutexBox->setVisible(false);
+        ui->pipeW_PButton->setVisible(false);
+        ui->pipeW_VButton->setVisible(false);
     }
     else if(id > 0)
     {
         ui->typeLabel->setText("Child" + QString::number(id));
         ui->readWidget->setVisible(false);
+        ui->childMutexBox->setVisible(false);
     }
 }
 
@@ -124,7 +130,7 @@ void MainWindow::readPipe(int n)
         }
         else // printable data
         {
-            for(j = i; buf[j] != (char)0xFF && j < num; j++)
+            for(j = i; buf[j] >= ' ' && buf[j] <= '~' && j < num; j++)
                 ;
             ui->dataEdit->appendPlainText(QByteArray(buf + i, j - i));
         }
@@ -135,6 +141,11 @@ void MainWindow::readPipe(int n)
 void MainWindow::writePipe(int n)
 {
     int num;
+    if(pipeWritingMutexOn)
+    {
+        ui->stateEdit->appendPlainText("Mutex: P(pipeWriting)");
+        sem_wait(pipeWritingMutex);
+    }
     if(n == -1)
     {
         QByteArray data = ui->dataEdit->toPlainText().toLocal8Bit();
@@ -150,12 +161,23 @@ void MainWindow::writePipe(int n)
         num = write(pipeW, buf, n);
     }
     ui->stateEdit->appendPlainText(QString("Write: expected %1 bytes, put %2 bytes").arg(n).arg(num));
+    if(pipeWritingMutexOn)
+    {
+        ui->stateEdit->appendPlainText("Mutex: V(pipeWriting)");
+        sem_post(pipeWritingMutex);
+    }
 }
 
 void MainWindow::setPipeHandle(int r, int w)
 {
     pipeR = r;
     pipeW = w;
+}
+
+void MainWindow::setMutex(std::vector<sem_t> *child, sem_t *pipe)
+{
+    childMutexList = child;
+    pipeWritingMutex = pipe;
 }
 
 void MainWindow::onTimeout()
@@ -175,5 +197,59 @@ void MainWindow::on_clearDataButton_clicked()
 void MainWindow::on_clearStateButton_clicked()
 {
     ui->stateEdit->clear();
+}
+
+
+void MainWindow::on_childMutexBox_clicked(bool checked)
+{
+    allChildrenWrittenMutexOn = checked;
+}
+
+
+void MainWindow::on_pipeWMutexBox_clicked(bool checked)
+{
+    pipeWritingMutexOn = checked;
+}
+
+
+void MainWindow::on_pipeW_PButton_clicked()
+{
+    int val;
+    sem_getvalue(pipeWritingMutex, &val);
+    if(val == 0)
+    {
+        ui->stateEdit->appendPlainText("Mutex: pipeWriting is 0! P() will block!");
+    }
+    else
+    {
+        ui->stateEdit->appendPlainText("Mutex: P(pipeWriting)");
+        sem_wait(pipeWritingMutex);
+        on_pipeW_valButton_clicked();
+    }
+}
+
+
+void MainWindow::on_pipeW_VButton_clicked()
+{
+    int val;
+    sem_getvalue(pipeWritingMutex, &val);
+    if(val == 1)
+    {
+        ui->stateEdit->appendPlainText("Mutex: pipeWriting is 1! pipeWriting is a mutex!");
+    }
+    else
+    {
+        ui->stateEdit->appendPlainText("Mutex: V(pipeWriting)");
+        sem_post(pipeWritingMutex);
+        on_pipeW_valButton_clicked();
+    }
+}
+
+
+void MainWindow::on_pipeW_valButton_clicked()
+{
+    int val;
+    sem_getvalue(pipeWritingMutex, &val);
+    ui->stateEdit->appendPlainText(QString("Mutex: pipeWriting: %1").arg(val));
 }
 

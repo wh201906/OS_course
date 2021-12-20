@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout_5">
+   <layout class="QHBoxLayout" name="horizontalLayout_6">
     <item>
      <layout class="QVBoxLayout" name="verticalLayout_3">
       <item>
@@ -127,176 +127,219 @@
      </layout>
     </item>
     <item>
-     <widget class="QWidget" name="readWidget" native="true">
-      <layout class="QVBoxLayout" name="verticalLayout">
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout">
-         <item>
-          <widget class="QPushButton" name="readSomeButton">
-           <property name="text">
-            <string>Read</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="readNumEdit">
-           <property name="text">
-            <string>10</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="label">
-           <property name="text">
-            <string>byte(s)</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <widget class="QPushButton" name="read1Button">
-         <property name="text">
-          <string>Read 1</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="read128Button">
-         <property name="text">
-          <string>Read 128</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="read512Button">
-         <property name="text">
-          <string>Read 512</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="read1024Button">
-         <property name="text">
-          <string>Read 1024</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="read4096Button">
-         <property name="text">
-          <string>Read 4096</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="read8192Button">
-         <property name="text">
-          <string>Read 8192</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-      </layout>
-     </widget>
-    </item>
-    <item>
-     <widget class="QWidget" name="writeWidget" native="true">
-      <layout class="QVBoxLayout" name="verticalLayout_2">
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_4">
-         <item>
-          <widget class="QPushButton" name="writeSomeButton">
-           <property name="text">
-            <string>Write</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="writeNumEdit">
-           <property name="text">
-            <string>10</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="label_4">
-           <property name="text">
-            <string>byte(s)</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <widget class="QPushButton" name="write1Button">
-         <property name="text">
-          <string>Write 1</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="write128Button">
-         <property name="text">
-          <string>Write 128</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="write512Button">
-         <property name="text">
-          <string>Write 512</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="write1024Button">
-         <property name="text">
-          <string>Write 1024</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="write4096Button">
-         <property name="text">
-          <string>Write 4096</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="write8192Button">
-         <property name="text">
-          <string>Write 8192</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="verticalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-      </layout>
-     </widget>
+     <layout class="QVBoxLayout" name="verticalLayout_4">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_5">
+        <item>
+         <widget class="QWidget" name="readWidget" native="true">
+          <layout class="QVBoxLayout" name="verticalLayout">
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout">
+             <item>
+              <widget class="QPushButton" name="readSomeButton">
+               <property name="text">
+                <string>Read</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="readNumEdit">
+               <property name="text">
+                <string>10</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label">
+               <property name="text">
+                <string>byte(s)</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QPushButton" name="read1Button">
+             <property name="text">
+              <string>Read 1</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="read128Button">
+             <property name="text">
+              <string>Read 128</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="read512Button">
+             <property name="text">
+              <string>Read 512</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="read1024Button">
+             <property name="text">
+              <string>Read 1024</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="read4096Button">
+             <property name="text">
+              <string>Read 4096</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="read8192Button">
+             <property name="text">
+              <string>Read 8192</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacer">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QWidget" name="writeWidget" native="true">
+          <layout class="QVBoxLayout" name="verticalLayout_2">
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_4">
+             <item>
+              <widget class="QPushButton" name="writeSomeButton">
+               <property name="text">
+                <string>Write</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="writeNumEdit">
+               <property name="text">
+                <string>10</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_4">
+               <property name="text">
+                <string>byte(s)</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QPushButton" name="write1Button">
+             <property name="text">
+              <string>Write 1</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="write128Button">
+             <property name="text">
+              <string>Write 128</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="write512Button">
+             <property name="text">
+              <string>Write 512</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="write1024Button">
+             <property name="text">
+              <string>Write 1024</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="write4096Button">
+             <property name="text">
+              <string>Write 4096</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="write8192Button">
+             <property name="text">
+              <string>Write 8192</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="childMutexBox">
+        <property name="text">
+         <string>allChildrenWritten Mutex</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="pipeWMutexBox">
+        <property name="text">
+         <string>isPipeWriting Mutex</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pipeW_PButton">
+        <property name="text">
+         <string>P(isPipeWriting)</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pipeW_VButton">
+        <property name="text">
+         <string>V(isPipeWriting)</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pipeW_valButton">
+        <property name="text">
+         <string>Val(isPipeWriting)</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>

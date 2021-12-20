@@ -1,6 +1,9 @@
 ﻿#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <vector>
+#include <semaphore.h>
+
 #include <QMainWindow>
 
 #define BUFLEN 32 * 1024 * 1024 // 32M
@@ -24,6 +27,7 @@ public:
 
     void appendText(const QString &text);
     void setPipeHandle(int r, int w);
+    void setMutex(std::vector<sem_t>* child, sem_t* pipe);
 
 protected:
     void showEvent(QShowEvent* e) override;
@@ -35,6 +39,16 @@ private slots:
 
     void on_clearStateButton_clicked();
 
+    void on_childMutexBox_clicked(bool checked);
+
+    void on_pipeWMutexBox_clicked(bool checked);
+
+    void on_pipeW_PButton_clicked();
+
+    void on_pipeW_VButton_clicked();
+
+    void on_pipeW_valButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     int id = -1;
@@ -43,6 +57,11 @@ private:
     int pipeR;
     int pipeW;
     static char buf[BUFLEN];
+
+    bool allChildrenWrittenMutexOn = false;
+    bool pipeWritingMutexOn = false;
+    std::vector<sem_t>* childMutexList;
+    sem_t* pipeWritingMutex;
 
     void readPipe(int n);
     void writePipe(int n);

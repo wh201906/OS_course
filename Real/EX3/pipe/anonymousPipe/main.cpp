@@ -1,6 +1,7 @@
 ﻿#include "mainwindow.h"
 #include <unistd.h>
 #include <vector>
+#include <semaphore.h>
 
 #include <QApplication>
 
@@ -12,6 +13,9 @@ int main(int argc, char *argv[])
     int i;
     std::vector<int> fpid(childNum);
 
+    sem_t pipeWritingMutex;
+    std::vector<sem_t> childMutexList;
+
     // handle arguments
     if(argc > 1)
     {
@@ -21,9 +25,13 @@ int main(int argc, char *argv[])
     }
 
     // some operations before fork
+    sem_init(&pipeWritingMutex, true, 1);
     for(i = 0; i < childNum; i++)
     {
+        sem_t s;
         fpid[i] = -1;
+        sem_init(&s, true, 0);
+        childMutexList.push_back(s);
     }
     pipe(pipeHandle);
 
@@ -53,6 +61,7 @@ int main(int argc, char *argv[])
 
     // pass pipe handle to the mainwindow
     w.setPipeHandle(pipeHandle[0], pipeHandle[1]);
+    w.setMutex(&childMutexList, &pipeWritingMutex);
     w.show();
     return a.exec();
 }
