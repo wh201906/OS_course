@@ -23,12 +23,10 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    void setId(int id);
+    void setId(int id, int childNum);
 
     void appendText(const QString &text);
     void setPipeHandle(int r, int w);
-    void setMutex(std::vector<sem_t>* child, sem_t* pipe);
-
 protected:
     void showEvent(QShowEvent* e) override;
 private slots:
@@ -52,6 +50,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     int id = -1;
+    int childNum;
     QTimer* runningTimer;
 
     int pipeR;
@@ -60,10 +59,11 @@ private:
 
     bool allChildrenWrittenMutexOn = false;
     bool pipeWritingMutexOn = false;
-    std::vector<sem_t>* childMutexList;
+    std::vector<sem_t*> childMutexList;
     sem_t* pipeWritingMutex;
 
     void readPipe(int n);
     void writePipe(int n);
+    sem_t *mySemaphoreOpen(const char *name, int val);
 };
 #endif // MAINWINDOW_H
