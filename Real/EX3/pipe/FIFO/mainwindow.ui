@@ -11,19 +11,12 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>unnamedPipe</string>
+   <string>namedPipe(FIFO)</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout_6">
+   <layout class="QHBoxLayout" name="horizontalLayout_7">
     <item>
      <layout class="QVBoxLayout" name="verticalLayout_3">
-      <item>
-       <widget class="QLabel" name="typeLabel">
-        <property name="text">
-         <string>-</string>
-        </property>
-       </widget>
-      </item>
       <item>
        <widget class="QLabel" name="PIDLabel">
         <property name="text">
@@ -129,6 +122,41 @@
     <item>
      <layout class="QVBoxLayout" name="verticalLayout_4">
       <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_6">
+        <item>
+         <widget class="QPushButton" name="createFIFOButton">
+          <property name="text">
+           <string>Create</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="readModeButton">
+          <property name="text">
+           <string>Read</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="writeModeButton">
+          <property name="text">
+           <string>Write</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="openFIFOButton">
+          <property name="text">
+           <string>Open</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
        <layout class="QHBoxLayout" name="horizontalLayout_5">
         <item>
          <widget class="QWidget" name="readWidget" native="true">
@@ -199,19 +227,6 @@
               <string>Read 8192</string>
              </property>
             </widget>
-           </item>
-           <item>
-            <spacer name="verticalSpacer">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>40</height>
-              </size>
-             </property>
-            </spacer>
            </item>
           </layout>
          </widget>
@@ -286,58 +301,23 @@
              </property>
             </widget>
            </item>
-           <item>
-            <spacer name="verticalSpacer_2">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>40</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
           </layout>
          </widget>
         </item>
        </layout>
       </item>
       <item>
-       <widget class="QCheckBox" name="childMutexBox">
-        <property name="text">
-         <string>allChildrenWritten Mutex</string>
+       <spacer name="verticalSpacer">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
         </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="pipeWMutexBox">
-        <property name="text">
-         <string>isPipeWriting Mutex</string>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
         </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="pipeW_PButton">
-        <property name="text">
-         <string>P(isPipeWriting)</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="pipeW_VButton">
-        <property name="text">
-         <string>V(isPipeWriting)</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="pipeW_valButton">
-        <property name="text">
-         <string>Val(isPipeWriting)</string>
-        </property>
-       </widget>
+       </spacer>
       </item>
      </layout>
     </item>
