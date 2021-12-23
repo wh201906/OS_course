@@ -5,6 +5,8 @@
 #include <QString>
 #include <QFile>
 
+#include <semaphore.h>
+
 #define BUFLEN 32 * 1024 * 1024 // 32M
 
 QT_BEGIN_NAMESPACE
@@ -33,6 +35,9 @@ private slots:
 
     void on_openButton_clicked();
 
+    void onMutexPButton_clicked();
+    void onMutexVButton_clicked();
+    void onMutexValButton_clicked();
 private:
     Ui::MainWindow *ui;
     QTimer* runningTimer;
@@ -42,7 +47,14 @@ private:
     QString typeName;
     QFile::OpenModeFlag mode = QFile::NotOpen;
 
+    sem_t* busyMutex;
+    sem_t* newDataMutex;
+    sem_t* receivedMutex;
+
     void readFile(int n);
     void writeFile(int n);
+    sem_t *mySemaphoreOpen(const char *name, int val);
+    sem_t *findMutexByWidget(QObject *widget);
+    QString getMutexName(sem_t *mutex);
 };
 #endif // MAINWINDOW_H

@@ -200,6 +200,69 @@
         </property>
        </spacer>
       </item>
+      <item>
+       <widget class="QPushButton" name="newData_PButton">
+        <property name="text">
+         <string>P(newData)</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="newData_VButton">
+        <property name="text">
+         <string>V(newData)</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="newData_valButton">
+        <property name="text">
+         <string>Val(newData)</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="busy_PButton">
+        <property name="text">
+         <string>P(busy)</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="busy_VButton">
+        <property name="text">
+         <string>V(busy)</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="busy_valButton">
+        <property name="text">
+         <string>Val(busy)</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="received_PButton">
+        <property name="text">
+         <string>P(received)</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="received_VButton">
+        <property name="text">
+         <string>V(received)</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="received_valButton">
+        <property name="text">
+         <string>Val(received)</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
    </layout>
@@ -210,7 +273,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>28</height>
+     <height>23</height>
     </rect>
    </property>
   </widget>

@@ -25,6 +25,16 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->writeButton, &QPushButton::clicked, this, &MainWindow::onWriteButtonClicked);
     connect(ui->write512Button, &QPushButton::clicked, this, &MainWindow::onWriteButtonClicked);
     connect(runningTimer, &QTimer::timeout, this, &MainWindow::onTimeout);
+    connect(ui->newData_PButton, &QPushButton::clicked, this, &MainWindow::onMutexPButton_clicked);
+    connect(ui->newData_VButton, &QPushButton::clicked, this, &MainWindow::onMutexVButton_clicked);
+    connect(ui->newData_valButton, &QPushButton::clicked, this, &MainWindow::onMutexValButton_clicked);
+    connect(ui->busy_PButton, &QPushButton::clicked, this, &MainWindow::onMutexPButton_clicked);
+    connect(ui->busy_VButton, &QPushButton::clicked, this, &MainWindow::onMutexVButton_clicked);
+    connect(ui->busy_valButton, &QPushButton::clicked, this, &MainWindow::onMutexValButton_clicked);
+    connect(ui->received_PButton, &QPushButton::clicked, this, &MainWindow::onMutexPButton_clicked);
+    connect(ui->received_VButton, &QPushButton::clicked, this, &MainWindow::onMutexVButton_clicked);
+    connect(ui->received_valButton, &QPushButton::clicked, this, &MainWindow::onMutexValButton_clicked);
+
 
     runningTimer->start(500);
 
@@ -75,6 +85,10 @@ void MainWindow::readFile(int n)
     int i, j;
     char currData;
 
+    sem_wait(newDataMutex);
+    ui->stateEdit->appendPlainText("Mutex: P(newData)");
+    QApplication::processEvents(); // update UI
+
     num = mq_receive(fileHandle, buf, n, nullptr);
     ui->stateEdit->appendPlainText(QString("Read: expected %1 bytes, get %2 bytes").arg(n).arg(num));
 
@@ -97,12 +111,19 @@ void MainWindow::readFile(int n)
         }
         i = j;
     }
+
+    sem_post(receivedMutex);
+    ui->stateEdit->appendPlainText("Mutex: V(received)");
+    QApplication::processEvents(); // update UI
 }
 
 void MainWindow::writeFile(int n)
 {
     int num;
 
+    sem_wait(busyMutex);
+    ui->stateEdit->appendPlainText("Mutex: P(busy)");
+    QApplication::processEvents(); // update UI
     if(n == -1)
     {
         QByteArray data = ui->dataEdit->toPlainText().toLocal8Bit();
@@ -119,6 +140,16 @@ void MainWindow::writeFile(int n)
         ui->stateEdit->appendPlainText(QString("Write: OK"));
     else
         ui->stateEdit->appendPlainText(QString("Write: Failed: %1").arg(num));
+    sem_post(newDataMutex);
+    ui->stateEdit->appendPlainText("Mutex: V(newData)");
+    QApplication::processEvents(); // update UI
+    sem_post(busyMutex);
+    ui->stateEdit->appendPlainText("Mutex: V(busy)");
+    QApplication::processEvents(); // update UI
+    sem_wait(receivedMutex);
+    ui->stateEdit->appendPlainText("Mutex: P(received)");
+    ui->stateEdit->appendPlainText("Write: got a ACK");
+    QApplication::processEvents(); // update UI
 
 }
 
@@ -148,11 +179,13 @@ void MainWindow::on_createButton_clicked()
     attr.mq_maxmsg = 10;
     attr.mq_msgsize = 512;
     QByteArray fileName;
+    QByteArray absFileName;
     fileName = ui->nameEdit->text().toLocal8Bit();
-    if(access(fileName, F_OK) == 0)
+    absFileName = "/dev/mqueue" + fileName;
+    if(access(absFileName, F_OK) == 0)
     {
         ui->stateEdit->appendPlainText(typeName + ": file already exists");
-        if(remove(fileName) == 0)
+        if(remove(absFileName) == 0)
             ui->stateEdit->appendPlainText(typeName + ": file removed");
         else
             ui->stateEdit->appendPlainText(typeName + ": failed to remove file");
@@ -166,6 +199,10 @@ void MainWindow::on_createButton_clicked()
         ui->stateEdit->appendPlainText(typeName + ": failed to create");
         ui->stateEdit->appendPlainText(QString("Error: ") + strerror(errno));
     }
+    system("rm /dev/shm/*" + typeName.toLocal8Bit() + "_*");
+    busyMutex = mySemaphoreOpen("/" + typeName.toLocal8Bit() + "_busyMutex", 1);
+    newDataMutex = mySemaphoreOpen("/" + typeName.toLocal8Bit() + "_newDataMutex", 0);
+    receivedMutex = mySemaphoreOpen("/" + typeName.toLocal8Bit() + "_receivedMutex", 0);
 }
 
 
@@ -183,5 +220,83 @@ void MainWindow::on_openButton_clicked()
     {
         ui->stateEdit->appendPlainText(typeName + ": failed to open");
     }
+    busyMutex = mySemaphoreOpen("/" + typeName.toLocal8Bit() + "_busyMutex", 1);
+    newDataMutex = mySemaphoreOpen("/" + typeName.toLocal8Bit() + "_newDataMutex", 0);
+    receivedMutex = mySemaphoreOpen("/" + typeName.toLocal8Bit() + "_receivedMutex", 0);
 }
 
+sem_t* MainWindow::mySemaphoreOpen(const char* name, int val)
+{
+    sem_t* result;
+    result = sem_open(name, O_CREAT | O_EXCL | O_RDWR, 0644, val);
+    if(result == nullptr)
+        result = sem_open(name, O_RDWR, 0644, val);
+    return result;
+}
+
+void MainWindow::onMutexPButton_clicked()
+{
+    int val;
+    sem_t* mutex = findMutexByWidget(sender());
+    sem_getvalue(mutex, &val);
+    if(val == 0)
+    {
+        ui->stateEdit->appendPlainText("Mutex: " + getMutexName(mutex) + " is 0! P(" + getMutexName(mutex) + ") will block!");
+    }
+    else
+    {
+        sem_wait(mutex);
+        ui->stateEdit->appendPlainText("Mutex: P(" + getMutexName(mutex) + ")");
+        QApplication::processEvents(); // update UI
+        onMutexValButton_clicked(); // sender() from this slot function
+    }
+}
+
+
+void MainWindow::onMutexVButton_clicked()
+{
+    int val;
+    sem_t* mutex = findMutexByWidget(sender());
+    sem_getvalue(mutex, &val);
+    if(val == 1)
+    {
+        ui->stateEdit->appendPlainText("Mutex: " + getMutexName(mutex) + " is 1! " + getMutexName(mutex) + " is a mutex!");
+    }
+    else
+    {
+        sem_post(mutex);
+        ui->stateEdit->appendPlainText("Mutex: V(" + getMutexName(mutex) + ")");
+        QApplication::processEvents(); // update UI
+        onMutexValButton_clicked(); // sender() from this slot function
+    }
+}
+
+
+void MainWindow::onMutexValButton_clicked()
+{
+    int val;
+    sem_t* mutex = findMutexByWidget(sender());
+    sem_getvalue(mutex, &val);
+    ui->stateEdit->appendPlainText(QString("Mutex: " + getMutexName(mutex) + ": %1").arg(val));
+    QApplication::processEvents(); // update UI
+}
+
+sem_t* MainWindow::findMutexByWidget(QObject* widget)
+{
+    if(widget == ui->busy_PButton || widget == ui->busy_VButton || widget == ui->busy_valButton)
+        return busyMutex;
+    else if(widget == ui->newData_PButton || widget == ui->newData_VButton || widget == ui->newData_valButton)
+        return newDataMutex;
+    else if(widget == ui->received_PButton || widget == ui->received_VButton || widget == ui->received_valButton)
+        return receivedMutex;
+}
+
+QString MainWindow::getMutexName(sem_t* mutex)
+{
+    if(mutex == busyMutex)
+        return "busy";
+    else if(mutex == newDataMutex)
+        return "newData";
+    else if(mutex == receivedMutex)
+        return "received";
+}
