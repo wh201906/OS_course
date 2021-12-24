@@ -1,4 +1,5 @@
 #include "myutil.h"
+#include <stdio.h>
 
 void file2buf(const char* filename, uint8_t* buf, uint64_t fileOffset, uint64_t len)
 {
