@@ -12,7 +12,8 @@ int main()
     // analyze
     file2buf("E:\\test\\disk.img", globalBuf, 0, 512);
     mbr = (MBR_t *)globalBuf;
-    Disk_getDPT(mbr, dpt);
+    for (int i = 0; i < 4; i++)
+        Disk_getDPT(mbr, &dpt[i], i);
 
     printf("Origin:\n");
     printf("    LBA:\n");
@@ -22,8 +23,9 @@ int main()
     printf("    %llu, %u, %u\n", dpt[0].endCHS.C, dpt[0].endCHS.H, dpt[0].endCHS.S);
 
     // copy
-    Disk_writeDPT(mbr, &dpt[0], 1);
-    Disk_getDPT(mbr, newdpt);
+    Disk_setDPT(mbr, &dpt[0], 1);
+    for (int i = 0; i < 4; i++)
+        Disk_getDPT(mbr, &newdpt[i], i);
 
     printf("New:\n");
     printf("    LBA:\n");

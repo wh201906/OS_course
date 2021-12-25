@@ -15,7 +15,8 @@ int main()
     // analyze
     file2buf("E:\\test\\disk.img", globalBuf, 0, 512);
     mbr = (MBR_t *)globalBuf;
-    Disk_getDPT(mbr, dpt);
+    for (int i = 0; i < 4; i++)
+        Disk_getDPT(mbr, &dpt[i], i);
 
     // convert
     newStartCHS = LBA2CHS(dpt[0].startSec);

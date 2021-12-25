@@ -12,16 +12,16 @@ struct DPT_item
 };
 
 // mapped to the raw disk data
+// sizeof(MBR_t) = 512;
 struct MBR_t
 {
     uint8_t bootCode[446];
-    uint8_t DPT[4][16];
-    uint16_t end = 0xAA55; // 0x55 0xAA->0xAA55(little endian)
+    uint8_t DPTData[4][16];
+    uint8_t end[2] = {0x55, 0xAA};
 };
 
-// get 4 DPT items from MBR
-void Disk_getDPT(const MBR_t *MBR, DPT_item items[4]);
-// write DPT to MBR
-void Disk_writeDPT(MBR_t *MBR, const DPT_item *item, uint8_t id);
+// get DPT items from MBR
+void Disk_getDPT(const MBR_t *MBR, DPT_item *item, uint8_t id);
+void Disk_setDPT(MBR_t *MBR, const DPT_item *item, uint8_t id);
 
 #endif
