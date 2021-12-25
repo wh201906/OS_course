@@ -1,20 +1,6 @@
 #include "myutil.h"
 #include <stdio.h>
 
-void file2buf(const char* filename, uint8_t* buf, uint64_t fileOffset, uint64_t len)
-{
-    FILE *file = fopen(filename, "rb");
-    fseek(file, fileOffset, SEEK_SET);
-    fread(buf, 1, len, file);
-}
-
-void buf2file(const char* filename, uint8_t* buf, uint64_t fileOffset, uint64_t len)
-{
-    FILE *file = fopen(filename, "wb");
-    fseek(file, fileOffset, SEEK_SET);
-    fwrite(buf, 1, len, file);
-}
-
 CHS_t LBA2CHS(uint64_t LBA)
 {
     CHS_t result;
