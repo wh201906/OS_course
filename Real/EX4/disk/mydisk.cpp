@@ -1,13 +1,6 @@
 #include "mydisk.h"
 #include <stdio.h>
 
-MBR_t MyDisk::MBR()
-{
-    MBR_t mbr;
-    mbr.mapTo(m_data, 512);
-    return mbr;
-}
-
 MyPartition MyDisk::partition(uint8_t id)
 {
     MyPartition result;
@@ -28,14 +21,8 @@ MyPartition MyDisk::partition(uint8_t id)
 void MyDisk::info()
 {
     DataHandle::info();
+    printf("MyDisk\n");
     MBR().info();
-}
-
-DPT_item MBR_t::DPT(uint8_t id)
-{
-    DPT_item dptItem;
-    dptItem.mapTo(m_data + 446 + 16 * id, 16);
-    return dptItem;
 }
 
 bool MBR_t::isValid()
@@ -46,6 +33,7 @@ bool MBR_t::isValid()
 void MBR_t::info()
 {
     DataHandle::info();
+    printf("MBR_t\n");
     for (uint8_t i = 0; i < 4; i++)
         DPT(i).info();
 }
@@ -91,8 +79,10 @@ void DPT_item::info()
 {
     CHS_t startCHS, endCHS;
     DataHandle::info();
+    printf("DPT_item\n");
     if (!isValid())
         return;
+        
     startCHS = getStartCHS();
     endCHS = getEndCHS();
     printf("isActive:0x%02x, FSType:0x%02x, secSize:%u\n", *isActive(), *FSType(), *secSize());

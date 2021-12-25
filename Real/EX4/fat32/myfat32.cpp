@@ -1,54 +1,90 @@
 #include "myfat32.h"
 #include "string.h"
+#include <stdio.h>
 
-void FAT32_getBPB(const FAT32_DBR_t *DBR, FAT32_BPB_t *BPB)
+bool MyFAT32::isValid()
 {
-    uint8_t *ptr = (uint8_t *)(DBR->BPBData);
-    BPB->bytesPerSec = *(uint16_t *)(ptr + 0);
-    BPB->bytesPerSec = *(uint16_t *)(ptr + 0);
-    BPB->secPerClust = *(ptr + 2);
-    BPB->reservedSecNum = *(uint16_t *)(ptr + 3);
-    BPB->FATNum = *(ptr + 5);
-    BPB->mediaType = *(ptr + 10);
-    BPB->secPerTrack = *(uint16_t *)(ptr + 13);
-    BPB->headNum = *(uint16_t *)(ptr + 15);
-    BPB->hiddenSecNum = *(uint32_t *)(ptr + 17);
-    BPB->secNum = *(uint32_t *)(ptr + 21);
-    BPB->FATSize = *(uint32_t *)(ptr + 25);
-    BPB->FATflag = *(uint16_t *)(ptr + 29);
-    BPB->FSVer = *(uint16_t *)(ptr + 31);
-    BPB->rootDirClustId = *(uint32_t *)(ptr + 33);
-    BPB->FSISecId = *(uint16_t *)(ptr + 37);
-    BPB->DBRBakSecId = *(uint16_t *)(ptr + 39);
-    BPB->BIOSDrive = *(ptr + 53);
-    BPB->EDPBSig = *(ptr + 55);
-    BPB->serial = *(uint32_t *)(ptr + 56);
-    memcpy(BPB->label, ptr + 60, 11);
-    memcpy(BPB->FSLabel, ptr + 71, 8);
+    return MyPartition::isValid() && DBR().isValid();
 }
 
-void FAT32_setBPB(FAT32_DBR_t *DBR, const FAT32_BPB_t *BPB)
+void MyFAT32::info()
 {
-    uint8_t *ptr = (uint8_t *)(DBR->BPBData);
-    *(uint16_t *)(ptr + 0) = BPB->bytesPerSec;
-    *(uint16_t *)(ptr + 0) = BPB->bytesPerSec;
-    *(ptr + 2) = BPB->secPerClust;
-    *(uint16_t *)(ptr + 3) = BPB->reservedSecNum;
-    *(ptr + 5) = BPB->FATNum;
-    *(ptr + 10) = BPB->mediaType;
-    *(uint16_t *)(ptr + 13) = BPB->secPerTrack;
-    *(uint16_t *)(ptr + 15) = BPB->headNum;
-    *(uint32_t *)(ptr + 17) = BPB->hiddenSecNum;
-    *(uint32_t *)(ptr + 21) = BPB->secNum;
-    *(uint32_t *)(ptr + 25) = BPB->FATSize;
-    *(uint16_t *)(ptr + 29) = BPB->FATflag;
-    *(uint16_t *)(ptr + 31) = BPB->FSVer;
-    *(uint32_t *)(ptr + 33) = BPB->rootDirClustId;
-    *(uint16_t *)(ptr + 37) = BPB->FSISecId;
-    *(uint16_t *)(ptr + 39) = BPB->DBRBakSecId;
-    *(ptr + 53) = BPB->BIOSDrive;
-    *(ptr + 55) = BPB->EDPBSig;
-    *(uint32_t *)(ptr + 56) = BPB->serial;
-    memcpy(ptr + 60, BPB->label, 11);
-    memcpy(ptr + 71,BPB->FSLabel, 8);
+    DataHandle::info();
+    printf("MyFAT32\n");
+    DBR().info();
+}
+
+bool DBR_t::isValid()
+{
+    return DataHandle::isValid() && *(uint16_t *)end() == 0xAA55;
+}
+
+void DBR_t::info()
+{
+    uint8_t *jmpData;
+    uint8_t *OEMData;
+    BPB_t bpb;
+
+    DataHandle::info();
+    printf("DBR\n");
+    jmpData = jmp();
+    OEMData = OEM();
+    bpb = BPB();
+    printf("jmp:0x%02x 0x%02x 0x%02x <-> 0xEB 0x58 0x90\n", jmpData[0], jmpData[1], jmpData[2]);
+    printf("OEM:");
+    for (uint8_t i = 0; i < 8; i++)
+        putchar(OEMData[i]);
+    putchar('\n');
+    bpb.info();
+    // Check backup?
+}
+
+bool BPB_t::isValid()
+{
+    bool result = true;
+    result &= DataHandle::isValid();
+    result &= *bytesPerSec() > 0;
+    result &= *secPerClust() > 0;
+    result &= *secNum() > 0;
+    return result;
+}
+
+void BPB_t::info()
+{
+    uint8_t *labelData;
+    uint8_t *FSLabelData;
+
+    DataHandle::info();
+    printf("BPB_t\n");
+    if (!isValid())
+        return;
+
+    labelData = label();
+    FSLabelData = FSLabel();
+    printf("bytesPerSec:%u\n", *bytesPerSec());
+    printf("secPerClust:%u\n", *secPerClust());
+    printf("reservedSecNum:%u\n", *reservedSecNum());
+    printf("FATNum:%u\n", *FATNum());
+    printf("mediaType:0x%02x\n", *mediaType());
+    printf("secPerTrack:%u\n", *secPerTrack());
+    printf("headNum:%u\n", *headNum());
+    printf("hiddenSecNum:%u\n", *hiddenSecNum());
+    printf("secNum:%u\n", *secNum());
+    printf("FATSize:%u\n", *FATSize());
+    printf("FATflag:0x%04x\n", *FATflag());
+    printf("FSVer:%u\n", *FSVer());
+    printf("rootDirClustId:%u\n", *rootDirClustId());
+    printf("FSISecId:%u\n", *FSISecId());
+    printf("DBRBakSecId:%u\n", *DBRBakSecId());
+    printf("BIOSDrive:%u\n", *BIOSDrive());
+    printf("EDPBSig:%u\n", *EDPBSig());
+    printf("serial:%u\n", *serial());
+    printf("label:");
+    for (uint8_t i = 0; i < 11; i++)
+        putchar(labelData[i]);
+    putchar('\n');
+    printf("FSLabel:");
+    for (uint8_t i = 0; i < 8; i++)
+        putchar(FSLabelData[i]);
+    putchar('\n');
 }

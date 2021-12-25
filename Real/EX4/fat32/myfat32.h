@@ -2,50 +2,76 @@
 #define _MYFAT32_H_
 
 #include "mycommon.h"
+#include "mydisk.h"
 
-// 25 fields
-// 24 valid fields in FAT32
-struct FAT32_BPB_t
+class BPB_t : public DataHandle
 {
-    uint16_t bytesPerSec;
-    uint8_t secPerClust;
-    uint16_t reservedSecNum;
-    uint8_t FATNum;
-    // uint16_t rootDirNum;
-    // uint16_t secNum_small;
-    uint8_t mediaType;
-    // uint16_t secPerFAT;
-    uint16_t secPerTrack;
-    uint16_t headNum;
-    uint32_t hiddenSecNum; // equals to DPT_item->startSec
-    uint32_t secNum;
-    uint32_t FATSize; // in sectors
-    uint16_t FATflag;
-    uint16_t FSVer;
-    uint32_t rootDirClustId;
-    uint16_t FSISecId;
-    uint16_t DBRBakSecId;
-    // uint8_t reserved[12];
-    uint8_t BIOSDrive;
-    // uint8_t reserved;
-    uint8_t EDPBSig;
-    uint32_t serial;
-    uint8_t label[11];
-    uint8_t FSLabel[8];
+public:
+    // general
+    using DataHandle::DataHandle;
+
+    //data
+    uint16_t *bytesPerSec() { return (uint16_t *)(m_data + 0); }    // len: 2
+    uint8_t *secPerClust() { return (m_data + 2); }                 // len: 1
+    uint16_t *reservedSecNum() { return (uint16_t *)(m_data + 3); } // len: 2
+    uint8_t *FATNum() { return (m_data + 5); }                      // len: 1
+    // uint16_t rootDirNum;                                         // len: 2
+    // uint16_t secNum_small;                                       // len: 2
+    uint8_t *mediaType() { return (m_data + 10); } // len: 1
+    // uint16_t secPerFAT;                         // len: 2
+    uint16_t *secPerTrack() { return (uint16_t *)(m_data + 13); }    // len: 2
+    uint16_t *headNum() { return (uint16_t *)(m_data + 15); }        // len: 2
+    uint32_t *hiddenSecNum() { return (uint32_t *)(m_data + 17); }   // len: 4 // equals to DPT_item->startSec
+    uint32_t *secNum() { return (uint32_t *)(m_data + 21); }         // len: 4
+    uint32_t *FATSize() { return (uint32_t *)(m_data + 25); }        // len: 4 // in sectors
+    uint16_t *FATflag() { return (uint16_t *)(m_data + 29); }        // len: 2
+    uint16_t *FSVer() { return (uint16_t *)(m_data + 31); }          // len: 2
+    uint32_t *rootDirClustId() { return (uint32_t *)(m_data + 33); } // len: 4
+    uint16_t *FSISecId() { return (uint16_t *)(m_data + 37); }       // len: 2
+    uint16_t *DBRBakSecId() { return (uint16_t *)(m_data + 39); }    // len: 2
+    // uint8_t reserved[12];                                         // len: 12
+    uint8_t *BIOSDrive() { return (m_data + 53); } // len: 1
+    // uint8_t reserved;                           // len: 1
+    uint8_t *EDPBSig() { return (m_data + 55); }             // len: 1
+    uint32_t *serial() { return (uint32_t *)(m_data + 56); } // len: 4
+    uint8_t *label() { return (m_data + 60); }               // len: 11
+    uint8_t *FSLabel() { return (m_data + 71); }             // len: 8
+
+    // operations
+    bool isValid() override;
+    void info() override;
 };
 
-// mapped to the raw disk data
-// sizeof(FAT32_DBR_t) = 512;
-struct FAT32_DBR_t
+class DBR_t : public DataHandle
 {
-    uint8_t jmp[3] = {0xEB, 0x58, 0x90};
-    uint8_t OEM[8] = {'M', 'S', 'D', 'O', 'S', '5', '.', '0'};
-    uint8_t BPBData[79];
-    uint8_t bootCode[420];
-    uint8_t end[2] = {0x55, 0xAA};
+public:
+    // general
+    using DataHandle::DataHandle;
+
+    //data
+    uint8_t *jmp() { return (m_data + 0); }        // len: 3
+    uint8_t *OEM() { return (m_data + 3); }        // len: 8
+    BPB_t BPB() { return BPB_t(m_data + 11, 90); } // len: 79
+    uint8_t *bootCode() { return (m_data + 90); }  // len: 420
+    uint8_t *end() { return (m_data + 510); }      // len: 2
+
+    // operations
+    bool isValid() override;
+    void info() override;
 };
 
-void FAT32_getBPB(const FAT32_DBR_t *DBR, FAT32_BPB_t *BPB);
-void FAT32_setBPB(FAT32_DBR_t *DBR, const FAT32_BPB_t *BPB);
+class MyFAT32 : public MyPartition
+{
+public:
+    // general
+    using MyPartition::MyPartition;
+
+    //data
+    DBR_t DBR() { return DBR_t(m_data, 512); }
+
+    // operations
+    bool isValid() override;
+    void info() override;
+};
 
 #endif

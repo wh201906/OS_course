@@ -26,15 +26,19 @@ public:
     enum DataType
     {
         FromFile = 0, // owns a buffer
-        FromMemory // mapped to memory area
+        FromMemory    // mapped to memory area
     };
 
-    ~DataHandle();
+    explicit DataHandle(){}
+    explicit DataHandle(const char *filename, uint64_t srcOffset, uint64_t len) { load(filename, srcOffset, len); }
+    explicit DataHandle(uint8_t *ptr, uint64_t len) { mapTo(ptr, len); }
+    explicit DataHandle(DataHandle &handle, uint64_t srcOffset, uint64_t len) { mapTo(handle, srcOffset, len); }
+    ~DataHandle() { release(); }
 
-    bool load(const char *filename, uint64_t srcOffset, uint64_t m_len);
+    bool load(const char *filename, uint64_t srcOffset, uint64_t len);
     bool mapTo(uint8_t *ptr, uint64_t len);
-    bool mapTo(DataHandle& handle, uint64_t srcOffset, uint64_t len);
-    bool save(const char *filename); // save, overwrite the whole file
+    bool mapTo(DataHandle &handle, uint64_t srcOffset, uint64_t len);
+    bool save(const char *filename);                                                       // save, overwrite the whole file
     bool save(const char *filename, uint64_t srcOffset, uint64_t dstOffset, uint64_t len); // save, overwrite from the dstOffset
     void release();
     virtual bool isValid();
@@ -45,7 +49,7 @@ public:
     DataType type() { return m_type; }
 
     void showHex(uint64_t len);
-    void showHex();
+    void showHex() { showHex(m_len); }
 
 protected:
     virtual void afterDataChanged() {}

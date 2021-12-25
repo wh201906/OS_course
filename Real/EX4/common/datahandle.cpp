@@ -3,11 +3,6 @@
 
 #include <stdio.h>
 
-DataHandle::~DataHandle()
-{
-    release();
-}
-
 bool DataHandle::load(const char *filename, uint64_t srcOffset, uint64_t len)
 {
     FILE *file = fopen(filename, "rb");
@@ -111,9 +106,4 @@ void DataHandle::showHex(uint64_t len)
                 printf("  ");
         }
     }
-}
-
-void DataHandle::showHex()
-{
-    showHex(m_len);
 }
