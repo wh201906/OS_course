@@ -1,8 +1,6 @@
 #include "datahandle.h"
 #include "mycommon.h"
 
-#include <stdio.h>
-
 bool DataHandle::load(const char *filename, uint64_t srcOffset, uint64_t len)
 {
     FILE *file = fopen(filename, "rb");
@@ -85,13 +83,21 @@ bool DataHandle::isValid()
 void DataHandle::info()
 {
     printf("--------------------------\n");
-    printf("data:0x%p, len:%llu\n", m_data, m_len);
-    printf("type:%s, valid: %c\n", m_type == FromFile ? "FromFile" : "FromMemory", isValid() ? 'T' : 'F');
+    printf("data:0x%p, len:%llu", m_data, m_len);
+    for (uint16_t factor = 512; factor <= 4096; factor *= 2)
+    {
+        if (m_len / factor > 1 && m_len % factor == 0)
+            printf("=%u*%u", m_len / factor, factor);
+        else
+            break;
+    }
+    putchar('\n');
+    printf("type:%s, valid:%c\n", m_type == FromFile ? "FromFile" : "FromMemory", isValid() ? 'T' : 'F');
 }
 
 void DataHandle::showHex(uint64_t len)
 {
-    if(!isValid())
+    if (!DataHandle::isValid())
     {
         printf("showHex(): invalid!\n");
     }
@@ -99,11 +105,21 @@ void DataHandle::showHex(uint64_t len)
     {
         for (uint64_t i = 0; i < len; i++)
         {
-            printf("%02x ", *(m_data+i));
-            if(i % 16 == 15)
+            printf("%02x ", *(m_data + i));
+            if (i % 16 == 15)
                 printf("\n");
-            else if(i % 8 == 7)
+            else if (i % 8 == 7)
                 printf("  ");
         }
+        printf("\n");
     }
+}
+
+bool DataHandle::fill(uint8_t data)
+{
+    if (!DataHandle::isValid())
+        return false;
+    for (uint64_t i = 0; i < m_len; i++)
+        m_data[i] = data;
+    return true;
 }

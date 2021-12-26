@@ -16,7 +16,7 @@ S = 1
 LBA = 63
 s.add((C * HPC + H) * SPT + S - 1 == LBA)
 
-result = str(s.check())
-print(result)
-if(result == 'sat'):
+if s.check() == sat:
     print(s.model())
+
+# [SPT = 63, HPC = 255]

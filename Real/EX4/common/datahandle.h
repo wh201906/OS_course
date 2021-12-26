@@ -50,6 +50,7 @@ public:
 
     void showHex(uint64_t len);
     void showHex() { showHex(m_len); }
+    virtual bool fill(uint8_t data);
 
 protected:
     virtual void afterDataChanged() {}

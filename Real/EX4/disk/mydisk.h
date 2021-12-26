@@ -55,6 +55,8 @@ public:
 
     // operations
     void info() override;
+    bool init();
+    bool newPartition(uint8_t DPTId, uint64_t startPos, uint64_t len);
 };
 
 #endif

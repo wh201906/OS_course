@@ -13,6 +13,7 @@ int main()
     MyPartition part;
     disk.load("E:\\test\\disk.img", 0, 512 * 128);
     part = disk.partition(0);
+    part.info();
     MyFAT32 fat32(part, 0, 0);
     fat32.info();
 

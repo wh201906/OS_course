@@ -1,4 +1,5 @@
 #include "mydisk.h"
+#include "myutil.h"
 #include <stdio.h>
 
 MyPartition MyDisk::partition(uint8_t id)
@@ -14,7 +15,7 @@ MyPartition MyDisk::partition(uint8_t id)
     if (!dpt.isValid())
         return result;
 
-    result.mapTo(m_data + *dpt.startSec() * 512, *dpt.secSize() * 512);
+    result.mapTo(m_data + *dpt.startSec() * BPS, *dpt.secSize() * BPS);
     return result;
 }
 
@@ -23,6 +24,36 @@ void MyDisk::info()
     DataHandle::info();
     printf("MyDisk\n");
     MBR().info();
+}
+
+bool MyDisk::init()
+{
+    MBR_t mbr;
+    if (!DataHandle::isValid())
+        return false;
+
+    mbr = MBR();
+    // clean DPT
+    for (uint8_t i = 0; i < 4; i++)
+        mbr.DPT(i).fill(0x00);
+    // set 55 AA
+    *(uint16_t *)(mbr.end()) = 0xAA55;
+
+    return true;
+}
+
+bool MyDisk::newPartition(uint8_t DPTId, uint64_t startPos, uint64_t len)
+{
+    // if ((startPos + len) * BPS > m_len)
+    //     return false;
+    DPT_item dpt = MBR().DPT(DPTId);
+    *dpt.isActive() = 0x00; // inactive
+    *dpt.FSType() = 0x0B;   // FAT32
+    *dpt.startSec() = startPos;
+    *dpt.secSize() = len;
+    dpt.setStartCHS(LBA2CHS(startPos));
+    dpt.setEndCHS(LBA2CHS(startPos + len - 1));
+    return true;
 }
 
 bool MBR_t::isValid()
@@ -82,7 +113,7 @@ void DPT_item::info()
     printf("DPT_item\n");
     if (!isValid())
         return;
-        
+
     startCHS = getStartCHS();
     endCHS = getEndCHS();
     printf("isActive:0x%02x, FSType:0x%02x, secSize:%u\n", *isActive(), *FSType(), *secSize());
