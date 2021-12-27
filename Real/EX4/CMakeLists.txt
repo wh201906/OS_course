@@ -16,6 +16,4 @@ set(SRC_MAIN ./main.cpp ${SRC_COMMON} ${SRC_DISK} ${SRC_FAT32})
 
 add_executable(${PROJECT_NAME} ${SRC_MAIN})
 
-ADD_SUBDIRECTORY(common ./common)
-ADD_SUBDIRECTORY(disk ./disk)
-ADD_SUBDIRECTORY(fat32 ./fat32)
+ADD_SUBDIRECTORY(test ./test)
