@@ -17,12 +17,12 @@ bool FAT_t::init(uint8_t mediaType)
     return true;
 }
 
-uint64_t FAT_t::nextEmpty(uint64_t start)
+uint64_t FAT_t::nextFree(uint64_t start)
 {
     uint32_t *ptr = (uint32_t *)m_data;
     for (ptr += start; (uint8_t *)ptr - m_data < m_len; ptr++)
     {
-        if(*ptr == ItemEmpty)
+        if(*ptr == ItemFree)
             break;
     }
     if((uint8_t *)ptr - m_data >= m_len)

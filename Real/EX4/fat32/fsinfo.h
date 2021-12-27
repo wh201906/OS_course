@@ -16,7 +16,7 @@ public:
     // uint8_t reserved[480]                              // len: 480
     uint32_t *sig2() { return (uint32_t *)(m_data + 484); }           // len: 4 // 0x61417272
     uint32_t *freeClustNum() { return (uint32_t *)(m_data + 488); }   // len: 4
-    uint32_t *nextEmptyClust() { return (uint32_t *)(m_data + 492); } // len: 4
+    uint32_t *nextFreeClust() { return (uint32_t *)(m_data + 492); } // len: 4
     // uint8_t reserved[12]                                // len: 480
     uint32_t *end() { return (uint32_t *)(m_data + 508); } // len: 4 // 0xAA550000
 

@@ -15,7 +15,7 @@ void FSInfo_t::info()
     printf("Signature1: 0x%08x < - > 0x41615252\n", *sig1());
     printf("Signature2: 0x%08x < - > 0x61417272\n", *sig2());
     printf("Free Cluster Num: %u\n", *freeClustNum());
-    printf("Next Empty Cluster: %u\n", *nextEmptyClust());
+    printf("Next Free Cluster: %u\n", *nextFreeClust());
 }
 
 bool FSInfo_t::init(BPB_t &bpb, FAT_t &fat)
@@ -27,7 +27,7 @@ bool FSInfo_t::init(BPB_t &bpb, FAT_t &fat)
     *sig1() = 0x41615252;
     *sig2() = 0x61417272;
     *freeClustNum() = bpb.validDataSectors() / *bpb.secPerClust();
-    *nextEmptyClust() = fat.nextEmpty();
+    *nextFreeClust() = fat.nextFree();
     *end() = 0xAA550000;
     return true;
 }

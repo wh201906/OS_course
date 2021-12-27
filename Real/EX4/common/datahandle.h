@@ -2,6 +2,7 @@
 #define _DATAHANDLE_H_
 
 #include "mycommon.h"
+#include "string.h"
 
 // NOTE:
 // For child classes of DataHandle:

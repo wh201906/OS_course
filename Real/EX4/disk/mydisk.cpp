@@ -1,6 +1,5 @@
 #include "mydisk.h"
 #include "myutil.h"
-#include <stdio.h>
 
 MyPartition MyDisk::partition(uint8_t id)
 {

@@ -26,4 +26,6 @@ struct CHS_t
     uint8_t S;
 };
 
+const char justSpaces[] = "            ";
+
 #endif

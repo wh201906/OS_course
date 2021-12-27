@@ -1,6 +1,4 @@
 #include "myfat32.h"
-#include "string.h"
-#include <stdio.h>
 
 FAT_t MyFAT32::FAT(uint8_t id)
 {
@@ -76,7 +74,7 @@ bool MyFAT32::format(uint8_t secPerClust, bool fastMode)
     *bpb.BIOSDrive() = 0x80;
     *bpb.EDPBSig() = 0x29;
     *bpb.serial() = 0x12345678; // should be random
-    memcpy(bpb.label(), "           ", 11);
+    memcpy(bpb.label(), justSpaces, 11);
     memcpy(bpb.FSLabel(), "FAT32   ", 8);
     // backup DBR
     memcpy(m_data + *bpb.bytesPerSec() * *bpb.DBRBakSecId(), dbr.data(), BPS);

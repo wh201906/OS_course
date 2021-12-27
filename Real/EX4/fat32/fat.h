@@ -6,9 +6,9 @@
 class FAT_t : public DataHandle
 {
 public:
-    enum itemData : uint32_t
+    enum ItemData : uint32_t
     {
-        ItemEmpty = 0x00000000,
+        ItemFree = 0x00000000,
         Item0Prefix = 0x0FFFFF00,
         ItemBad = 0x0FFFFFF7,
         ItemEnd = 0x0FFFFFFF,
@@ -22,7 +22,7 @@ public:
     // operations
     void info() override;
     bool init(uint8_t mediaType = 0xF8);
-    uint64_t nextEmpty(uint64_t start = 2); // return 0 if no empty items are found
+    uint64_t nextFree(uint64_t start = 2); // return 0 if no free items are found
 };
 
 #endif
