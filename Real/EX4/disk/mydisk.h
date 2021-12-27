@@ -50,7 +50,7 @@ public:
     using DataHandle::DataHandle;
 
     // data
-    MBR_t MBR() { return MBR_t(m_data, 512); } // len: 512
+    MBR_t MBR() { return MBR_t(m_data, BPS); } // len: BPS
     MyPartition partition(uint8_t id);
 
     // operations

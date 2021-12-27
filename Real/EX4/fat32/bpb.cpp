@@ -49,11 +49,8 @@ void BPB_t::info()
         putchar(FSLabelData[i]);
     putchar('\n');
     putchar('\n');
-    uint64_t pos, size, unUsedSize;
+    uint64_t pos, size;
     uint64_t offset = *hiddenSecNum();
-    unUsedSize = *secNum() + 2 * *secPerClust();
-    unUsedSize -= *FATNum() * *FATSize();
-    unUsedSize -= *bytesPerSec() * *secPerClust() * *FATSize() / 4;
 
     printf("Map:(diskPos, partitionPos, size) in sectors\n");
     printf("|");
@@ -67,10 +64,55 @@ void BPB_t::info()
         printf("  FAT%u(%u,%u,%u)  |", i, pos + offset, pos, size);
     }
     pos += size;
-    size = *secNum() - pos - unUsedSize;
-    printf("  Data(%u,%u,%u)  |", pos + offset, pos, size);
-    pos += size;
-    printf("  Unused*(%u,%u,%u)  |", pos + offset, pos, unUsedSize);
-    putchar('\n');
-    printf("*: This area exists, but can't be mapped from FAT.\n");
+    uint64_t phy, mapped;
+    phy = physicalDataSectors();
+    mapped = mappedDataSectors();
+    if (phy > mapped)
+    {
+        printf("  Data(%u,%u,%u)  |", pos + offset, pos, mapped);
+        pos += mapped;
+        printf("  Unused*(%u,%u,%u)  |", pos + offset, pos, phy - mapped);
+        putchar('\n');
+        printf("*: This area exists, but can't be mapped from FAT.\n");
+    }
+    else if (phy < mapped)
+    {
+        printf("  Data(%u,%u,%u)  |", pos + offset, pos, phy);
+        pos += phy;
+        printf("  Invalid*(%u,%u,%u)  |", pos + offset, pos, mapped - phy);
+        putchar('\n');
+        printf("*: This area can be mapped from FAT, but doesn't exist.\n");
+    }
+}
+
+// two siturations:
+// let x = (FATSize * BPS / 4 - 2) * SPC
+// x stands for the sectors that FAT can mapped
+// let y = secNum - reservedSecNum - FATSize * FATNum
+// y stands for actural sectors for data
+// if x = y, everything is fine
+// if x > y, some FAT items are invalid
+// if x < y, some sectors won't be used.
+// my MyFAT32::format() will make sure x <= y
+uint64_t BPB_t::mappedDataSectors()
+{
+    return ((*FATSize() * *bytesPerSec() / 4 - 2) * *secPerClust());
+}
+uint64_t BPB_t::physicalDataSectors()
+{
+    return (*secNum() - *reservedSecNum() - *FATNum() * *FATSize());
+}
+uint64_t BPB_t::validDataSectors()
+{
+    uint64_t phy, mapped;
+    phy = physicalDataSectors();
+    mapped = mappedDataSectors();
+    return (phy < mapped ? phy : mapped);
+}
+uint64_t BPB_t::validFATItems()
+{
+    uint64_t fromFAT, fromPhy;
+    fromFAT = *FATSize() - 2;
+    fromPhy = physicalDataSectors() * 4.0 / *secPerClust() / *bytesPerSec(); // floor()
+    return (fromFAT < fromPhy ? fromFAT : fromPhy);
 }

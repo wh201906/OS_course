@@ -18,10 +18,10 @@ public:
     // uint16_t secNum_small;                                       // len: 2 // unused in FAT32
     uint8_t *mediaType() { return (m_data + 10); } // len: 1 // 0xF8: hard disk 0xFA: RAM disk
     // uint16_t secPerFAT;                         // len: 2 // 0 for FAT32
-    uint16_t *secPerTrack() { return (uint16_t *)(m_data + 13); }    // len: 2 
+    uint16_t *secPerTrack() { return (uint16_t *)(m_data + 13); }    // len: 2
     uint16_t *headNum() { return (uint16_t *)(m_data + 15); }        // len: 2
     uint32_t *hiddenSecNum() { return (uint32_t *)(m_data + 17); }   // len: 4 // equals to DPT_item->startSec
-    uint32_t *secNum() { return (uint32_t *)(m_data + 21); }         // len: 4 
+    uint32_t *secNum() { return (uint32_t *)(m_data + 21); }         // len: 4
     uint32_t *FATSize() { return (uint32_t *)(m_data + 25); }        // len: 4 // in sectors
     uint16_t *FATflag() { return (uint16_t *)(m_data + 29); }        // len: 2 // FATflag[7]=0 to update all FATs
     uint16_t *FSVer() { return (uint16_t *)(m_data + 31); }          // len: 2 // 0
@@ -35,6 +35,12 @@ public:
     uint32_t *serial() { return (uint32_t *)(m_data + 56); } // len: 4
     uint8_t *label() { return (m_data + 60); }               // len: 11 // fill space(0x20)
     uint8_t *FSLabel() { return (m_data + 71); }             // len: 8 // "FAT32   "
+
+    // extended data
+    uint64_t mappedDataSectors();
+    uint64_t physicalDataSectors();
+    uint64_t validDataSectors();
+    uint64_t validFATItems();
 
     // operations
     bool isValid() override;
