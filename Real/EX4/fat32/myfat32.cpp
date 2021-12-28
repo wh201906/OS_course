@@ -10,7 +10,7 @@ FAT_t MyFAT32::FAT(uint8_t id)
     if (!bpb.isValid())
         return FAT_t();
 
-    return FAT_t(m_data + (*bpb.reservedSecNum() + id * *bpb.FATSize()) * *bpb.bytesPerSec(), *bpb.FATSize());
+    return FAT_t(m_data + (*bpb.reservedSecNum() + id * *bpb.FATSize()) * *bpb.bytesPerSec(), *bpb.FATSize() * *bpb.bytesPerSec());
 }
 
 bool MyFAT32::isValid()
@@ -80,10 +80,10 @@ bool MyFAT32::format(uint8_t secPerClust, bool fastMode)
     memcpy(m_data + *bpb.bytesPerSec() * *bpb.DBRBakSecId(), dbr.data(), BPS);
     // set FAT
     for (uint8_t i = 0; i < *bpb.FATNum(); i++)
-        FAT(i).init();
+        FAT(i).init(*bpb.rootDirClustId());
     // set FSInfo
     fat = FAT(0);
-    FSInfo().init(bpb, fat);
+    FSInfo().init(fat);
     // backup FSInfo after DBRBak
     memcpy(m_data + *bpb.bytesPerSec() * (*bpb.DBRBakSecId() + 1), FSInfo().data(), BPS);
 

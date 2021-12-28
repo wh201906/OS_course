@@ -23,7 +23,7 @@ public:
     // operations
     bool isValid() override;
     void info() override;
-    bool init(BPB_t &bpb, FAT_t &fat);
+    bool init(FAT_t &fat);
 };
 
 #endif

@@ -18,7 +18,7 @@ void FSInfo_t::info()
     printf("Next Free Cluster: %u\n", *nextFreeClust());
 }
 
-bool FSInfo_t::init(BPB_t &bpb, FAT_t &fat)
+bool FSInfo_t::init(FAT_t &fat)
 {
     if (!DataHandle::isValid())
         return false;
@@ -26,7 +26,7 @@ bool FSInfo_t::init(BPB_t &bpb, FAT_t &fat)
     fill(0x00);
     *sig1() = 0x41615252;
     *sig2() = 0x61417272;
-    *freeClustNum() = bpb.validDataSectors() / *bpb.secPerClust();
+    *freeClustNum() = fat.freeNum(); // calculated from FAT, incorrect if mappedDataSectors > physicalDataSectors
     *nextFreeClust() = fat.nextFree();
     *end() = 0xAA550000;
     return true;

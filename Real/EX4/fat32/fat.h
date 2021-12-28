@@ -17,12 +17,14 @@ public:
     using DataHandle::DataHandle;
 
     //data
-    uint32_t *item(uint64_t id) { return ((uint32_t *)m_data + id); }
+    uint32_t *item(uint64_t id) { return ((uint32_t *)m_data + id); } // the first 2 item is calculated
 
     // operations
     void info() override;
-    bool init(uint8_t mediaType = 0xF8);
-    uint64_t nextFree(uint64_t start = 2); // return 0 if no free items are found
+    bool init(uint64_t bps = BPS, uint64_t rootDirId = 2, uint8_t mediaType = 0xF8);
+    uint64_t nextFree(uint64_t start = 2);         // return 0 if no free items are found
+    uint64_t num() { return (m_len / 4); } // the first 2 item is calculated
+    uint64_t freeNum();
 };
 
 #endif
