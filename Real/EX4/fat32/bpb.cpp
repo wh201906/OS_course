@@ -113,6 +113,6 @@ uint64_t BPB_t::validFATItems()
 {
     uint64_t fromFAT, fromPhy;
     fromFAT = *FATSize() - 2;
-    fromPhy = physicalDataSectors() * 4.0 / *secPerClust() / *bytesPerSec(); // floor()
+    fromPhy = physicalDataSectors() * 4.0 / bytesPerClust(); // floor()
     return (fromFAT < fromPhy ? fromFAT : fromPhy);
 }

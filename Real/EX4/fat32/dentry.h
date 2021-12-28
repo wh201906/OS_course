@@ -28,8 +28,12 @@ public:
     void setClusterId(uint32_t id);
     uint32_t *size() { return (uint32_t *)(m_data + 28); } // len: 4
 
+    // extended data
+    void fullName(char *result); // len(result) >= 13(8+3+'.'+\x00)
+
     // operations
     bool init(uint8_t attr = Archive);
+    bool isValid() override;
     void info() override;
 
 private:

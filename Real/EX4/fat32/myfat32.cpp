@@ -13,6 +13,23 @@ FAT_t MyFAT32::FAT(uint8_t id)
     return FAT_t(m_data + (*bpb.reservedSecNum() + id * *bpb.FATSize()) * *bpb.bytesPerSec(), *bpb.FATSize() * *bpb.bytesPerSec());
 }
 
+DataCluster_t MyFAT32::DataCluster()
+{
+    DataCluster_t d;
+    BPB_t bpb;
+    if (!isValid())
+        return d;
+
+    bpb = DBR().BPB();
+    if (!bpb.isValid())
+        return d;
+
+    d = DataCluster_t(m_data + (*bpb.reservedSecNum() + *bpb.FATNum() * *bpb.FATSize()) * *bpb.bytesPerSec(), bpb.validDataSectors() * *bpb.bytesPerSec());
+    d.setBPS(*bpb.bytesPerSec());
+    d.setSPC(*bpb.secPerClust());
+    return d;
+}
+
 bool MyFAT32::isValid()
 {
     return MyPartition::isValid() && DBR().isValid();
@@ -53,7 +70,7 @@ bool MyFAT32::format(uint8_t secPerClust, bool fastMode)
     // set BPB
     // 1. FATSize * BPS / 4 == DataSize / SPC + 2
     // 2. reservedSecNum + FATNum * FATSize + DataSize == secNum
-    // 1, 2 => FATSize_actural == floor((4secNum + 8SPC - 4reservedSecNum) / (4FATNum + BPS*SPC))
+    // 1, 2 => FATSize_actural == floor((4secNum + 8SPC - 4reservedSecNum) / (4FATNum + BPC))
     // unused: secNum - (FATNum*FATSize_actural + BPS*SPC*FATSize_actural/4 - 2SPC + reservedSecNum)
     bpb.fill(0x00);
     *bpb.bytesPerSec() = BPS;
@@ -65,7 +82,7 @@ bool MyFAT32::format(uint8_t secPerClust, bool fastMode)
     *bpb.headNum() = HPC;
     *bpb.hiddenSecNum() = 63; // might be different if 4k aligned
     *bpb.secNum() = m_len / *bpb.bytesPerSec();
-    *bpb.FATSize() = (4 * *bpb.secNum() + 8 * *bpb.secPerClust() - 4 * *bpb.reservedSecNum()) / (4 * *bpb.FATNum() + *bpb.bytesPerSec() * *bpb.secPerClust());
+    *bpb.FATSize() = (4 * *bpb.secNum() + 8 * *bpb.secPerClust() - 4 * *bpb.reservedSecNum()) / (4 * *bpb.FATNum() + bpb.bytesPerClust());
     *bpb.FATflag() = 0x0000;
     *bpb.FSVer() = 0x0000;
     *bpb.rootDirClustId() = 2;

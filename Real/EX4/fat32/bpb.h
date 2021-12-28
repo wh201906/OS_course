@@ -41,6 +41,7 @@ public:
     uint64_t physicalDataSectors();
     uint64_t validDataSectors();
     uint64_t validFATItems();
+    uint32_t bytesPerClust() { return (*bytesPerSec() * *secPerClust()); }
 
     // operations
     bool isValid() override;

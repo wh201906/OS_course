@@ -25,6 +25,7 @@ public:
     uint64_t nextFree(uint64_t start = 2);         // return 0 if no free items are found
     uint64_t num() { return (m_len / 4); } // the first 2 item is calculated
     uint64_t freeNum();
+    bool isItemValid(uint32_t item) { return (item > ItemFree && item < ItemBad); }
 };
 
 #endif
