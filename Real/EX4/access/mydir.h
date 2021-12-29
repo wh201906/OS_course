@@ -7,6 +7,7 @@
 #include "datacluster.h"
 #include <vector>
 #include <string>
+#include <functional>
 
 class MyDir_t
 {
@@ -19,6 +20,10 @@ public:
     // find DEntry_t by name in current directory
     // return the address of DEntry_t, or nullptr if not found
     uint8_t *find(const char *name, uint32_t DirID, uint8_t attr = DEntry_t::Directory | DEntry_t::Archive);
+    // find next free DEntry
+    uint8_t *findFree(uint32_t DirID);
+    bool mkdir(const char *name);
+    bool rename(const char *oldName, const char *newName);
 
 private:
     bool m_opened = false;
@@ -29,6 +34,9 @@ private:
     uint32_t m_rootDirStartID;
     uint32_t m_currDirStartID;
     std::vector<std::string> currPath;
+
+    // helper function of find
+    uint8_t *findHelper(uint32_t DirID, std::function<bool(DEntry_t &)> cond, bool checkValidity = true);
 };
 
 #endif

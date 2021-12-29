@@ -70,3 +70,59 @@ void DEntry_t::fullName(char *result)
     }
     result[i + j] = '\0';
 }
+
+void DEntry_t::fullDirName(char *result)
+{
+    uint8_t i;
+    if (!isValid())
+    {
+        result[0] = '\0';
+        return;
+    }
+    memcpy(result, name(), 8);
+    for (i = 0; i < 8; i++)
+    {
+        if (result[i] == ' ')
+            break;
+    }
+    result[i] = '\0';
+}
+
+bool DEntry_t::rename(const char *newName)
+{
+    size_t newLen, newExtLen;
+    uint8_t newDotPos = 0;
+    char nName[13], nExt[13];
+
+    newLen = strlen(newName);
+    if (newLen > 12)
+        return false;
+    strcpy(nName, newName);
+    while (nName[newDotPos] != '.' && nName[newDotPos] != '\0')
+        newDotPos++;
+    nName[newDotPos] = '\0';
+    if (newDotPos == newLen)
+        nExt[0] = '\0';
+    else
+        strcpy(nExt, nName + newDotPos + 1);
+    newLen = newDotPos;
+    newExtLen = strlen(nExt);
+    if (newLen > 8 || newExtLen > 3)
+        return false;
+
+    if (*attribute() & Directory)
+    {
+        if (newExtLen > 0)
+            return false;
+        memcpy(name(), justSpaces, 8);
+        memcpy(name(), nName, newLen);
+    }
+    else
+    {
+        memcpy(name(), justSpaces, 8);
+        memcpy(extension(), justSpaces, 3);
+        memcpy(name(), nName, newLen);
+        memcpy(extension(), nExt, newExtLen);
+    }
+    return true;
+}

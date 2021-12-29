@@ -29,10 +29,12 @@ public:
     uint32_t *size() { return (uint32_t *)(m_data + 28); } // len: 4
 
     // extended data
-    void fullName(char *result); // len(result) >= 13(8+3+'.'+\x00)
+    void fullName(char *result);    // len(result) >= 13(8+3+'.'+'\0')
+    void fullDirName(char *result); // len(result) >= 9(8+'\0')
 
     // operations
     bool init(uint8_t attr = Archive);
+    bool rename(const char *newName);
     bool isValid() override;
     void info() override;
 

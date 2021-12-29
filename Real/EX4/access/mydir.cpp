@@ -26,7 +26,6 @@ bool MyDir_t::open(MyFAT32 &partition)
 uint64_t MyDir_t::ls()
 {
     char filename[13];
-    char fileext[4];
     if (!m_opened)
         return 0;
 
@@ -103,9 +102,8 @@ bool MyDir_t::cd(char *path)
     return true;
 }
 
-uint8_t *MyDir_t::find(const char *name, uint32_t DirID, uint8_t attr)
+uint8_t *MyDir_t::findHelper(uint32_t DirID, std::function<bool(DEntry_t &)> cond, bool checkValidity)
 {
-    char currName[13];
     bool found = false;
     DEntry_t entry;
     // loop for directorys using 2 or more FAT items
@@ -116,19 +114,16 @@ uint8_t *MyDir_t::find(const char *name, uint32_t DirID, uint8_t attr)
         for (uint64_t i = 0; i < m_bpb.bytesPerClust(); i += 32)
         {
             entry = DEntry_t(&d[i], 32);
-            if (!entry.isValid())
+            if (checkValidity && !entry.isValid())
                 continue;
-            entry.fullName(currName);
-            if (strcmp(currName, name) == 0 && *entry.attribute() & attr)
+            if (cond(entry))
             {
                 found = true;
                 break;
             }
         }
         if (!found)
-        {
             DirID = *m_fat.item(DirID);
-        }
         else
             break;
     }
@@ -136,6 +131,28 @@ uint8_t *MyDir_t::find(const char *name, uint32_t DirID, uint8_t attr)
         return nullptr;
     else
         return entry.data();
+}
+
+uint8_t *MyDir_t::find(const char *name, uint32_t DirID, uint8_t attr)
+{
+    return findHelper(DirID,
+                      [&](DEntry_t &entry) -> bool
+                      {
+                          char currName[13];
+                          entry.fullName(currName);
+                          return (strcmp(currName, name) == 0 && *entry.attribute() & attr);
+                      });
+}
+
+uint8_t *MyDir_t::findFree(uint32_t DirID)
+{
+    return findHelper(
+        DirID,
+        [&](DEntry_t &entry) -> bool
+        {
+            return entry.DataHandle::isValid() && !entry.isValid();
+        },
+        false);
 }
 
 uint32_t MyDir_t::pwd(char *result)
@@ -150,4 +167,83 @@ uint32_t MyDir_t::pwd(char *result)
     }
     result[i] = '\0';
     return i;
+}
+
+bool MyDir_t::mkdir(const char *name)
+{
+    size_t len;
+    if (!m_opened)
+        return false;
+    len = strlen(name);
+    if (len > 8)
+        return false;
+    if (find(name, m_currDirStartID))
+        return false;
+    uint8_t *pos;
+    pos = findFree(m_currDirStartID);
+    // create first, allocate new cluster if directory become full after creating
+    // if pos = nullptr there, the partition might be full(failed to get new cluster in last allocation)
+    if (pos == nullptr)
+    {
+        // unexpected
+        return false;
+    }
+    DEntry_t newEntry(pos, 32);
+    uint32_t id = m_fat.nextFree();
+    if (id == 0)
+    {
+        // unexpected
+        return false;
+    }
+    // DEntry in current directory
+    newEntry.init(DEntry_t::Directory);
+    memcpy(newEntry.name(), name, len);
+    newEntry.setClusterId(id);
+    pos = m_dataCluster.cluster(id);
+    // FAT Item
+    *m_fat.item(id) = FAT_t::ItemEnd;
+    // DEntry in new directory
+    newEntry = DEntry_t(pos, 32);
+    newEntry.init(DEntry_t::Directory);
+    newEntry.name()[0] = '.';
+    newEntry.setClusterId(id);
+    newEntry = DEntry_t(pos + 32, 32);
+    newEntry.init(DEntry_t::Directory);
+    memcpy(newEntry.name(), "..", 2);
+    newEntry.setClusterId(m_currDirStartID);
+    // clean up new cluster
+    // set the first byte of every 32 bytes to 0x00
+    // so DEntry_t::isValid() will return false for unused DEntry
+    for (uint64_t i = 64; i < m_bpb.bytesPerClust(); i += 32)
+        *(pos + i) = 0x00;
+    // allocate new cluster if current directory is full
+    if (findFree(m_currDirStartID) == nullptr)
+    {
+        uint16_t end;
+        id = m_fat.nextFree();
+        if (id == 0)
+            return true; // new directory created, but failed to allocate new cluster for current directory(full now)
+        end = m_currDirStartID;
+        while (m_fat.isItemValid(*m_fat.item(end)))
+            end = *m_fat.item(end);
+        *m_fat.item(end) = id;
+        *m_fat.item(id) = FAT_t::ItemEnd;
+        // clean up new cluster
+        pos = m_dataCluster.cluster(id);
+        for (uint64_t i = 0; i < m_bpb.bytesPerClust(); i += 32)
+            *(pos + i) = 0x00;
+    }
+    return true;
+}
+
+bool MyDir_t::rename(const char *oldName, const char *newName)
+{
+    if (strlen(oldName) > 12)
+        return false;
+
+    uint8_t *pos = find(oldName, m_currDirStartID);
+    if (pos == nullptr)
+        return false;
+    DEntry_t entry(pos, 32);
+    return entry.rename(newName);
 }

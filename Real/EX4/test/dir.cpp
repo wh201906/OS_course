@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <ctype.h>
 #include "mydisk.h"
 #include "myutil.h"
 #include "myfat32.h"
@@ -6,7 +7,7 @@
 
 int main()
 {
-    char targetPath[50];
+    char path[128];
     char cmd[50];
     MyDisk disk;
     MyPartition part;
@@ -16,24 +17,42 @@ int main()
     MyDir_t dir(fat32);
     while (1)
     {
-        char currPath[128];
-        dir.pwd(currPath);
-        printf("%s>", currPath);
+        dir.pwd(path);
+        printf("%s>", path);
         scanf("%s", cmd);
+        for (uint8_t i = 0; cmd[i] != '\0'; i++)
+            cmd[i] = tolower(cmd[i]);
+
         if (strcmp(cmd, "ls") == 0)
         {
             printf("ls:%u\n", dir.ls());
         }
         else if (strcmp(cmd, "cd") == 0)
         {
-            scanf("%s", targetPath);
-            printf("target:%s\n", targetPath);
-            printf("cd:%u\n", dir.cd(targetPath));
+            scanf("%s", path);
+            printf("target:%s\n", path);
+            printf("cd:%u\n", dir.cd(path));
         }
         else if (strcmp(cmd, "pwd") == 0)
         {
-            dir.pwd(currPath);
-            printf("%s\n", currPath);
+            dir.pwd(path);
+            printf("%s\n", path);
+        }
+        else if (strcmp(cmd, "mkdir") == 0)
+        {
+            scanf("%s", path);
+            printf("target:%s\n", path);
+            printf("mkdir:%u\n", dir.mkdir(path));
+        }
+        else if (strcmp(cmd, "rename") == 0)
+        {
+            scanf("%s", path);
+            scanf("%s", cmd);
+            printf("rename:%u\n", dir.rename(path, cmd));
+        }
+        else if (strcmp(cmd, "save") == 0)
+        {
+            printf("save:%u\n", disk.save("E:\\test\\disk1.img"));
         }
         else if (strcmp(cmd, "q") == 0 || strcmp(cmd, "quit") == 0 || strcmp(cmd, "exit") == 0)
         {
