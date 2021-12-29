@@ -15,3 +15,10 @@ uint64_t CHS2LBA(CHS_t CHS)
     return (CHS.C * HPC + CHS.H) * SPT + CHS.S - 1;
 }
 
+std::vector<std::string> split(const char *str, const char *splitter)
+{
+    // use regex unmatched(-1 for 4th arg) result for splitting
+    std::string pathStr(str);
+    std::regex re(splitter);
+    return std::vector<std::string>(std::sregex_token_iterator(pathStr.begin(), pathStr.end(), re, -1), std::sregex_token_iterator());
+}

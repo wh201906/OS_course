@@ -1,5 +1,5 @@
 #include "mydir.h"
-#include <regex>
+#include "myutil.h"
 #include <stack>
 
 MyDir_t::MyDir_t(MyFAT32 &partition) : m_partition(partition)
@@ -50,7 +50,7 @@ uint64_t MyDir_t::ls()
     return result;
 }
 
-bool MyDir_t::cd(char *path)
+bool MyDir_t::cd(const char *path)
 {
     if (!m_opened)
         return false;
@@ -66,12 +66,8 @@ bool MyDir_t::cd(char *path)
         newPath = currPath;
     }
 
-    std::string pathStr(path);
-    std::regex re("/");
-
     // split path by '/', then try to access every part and update newDirStartID
-    // use regex unmatched(-1 for 4th arg) result for splitting
-    std::vector<std::string> vec(std::sregex_token_iterator(pathStr.begin(), pathStr.end(), re, -1), std::sregex_token_iterator());
+    std::vector<std::string> vec = split(path, "/");
     for (auto part = vec.begin(); part != vec.end(); part++)
     {
         // ignore empty parts
@@ -177,7 +173,7 @@ bool MyDir_t::mkdir(const char *name)
     len = strlen(name);
     if (len > 8)
         return false;
-    if (find(name, m_currDirStartID))
+    if (find(name))
         return false;
     uint8_t *pos;
     pos = findFree(m_currDirStartID);
@@ -241,7 +237,7 @@ bool MyDir_t::rename(const char *oldName, const char *newName)
     if (strlen(oldName) > 12)
         return false;
 
-    uint8_t *pos = find(oldName, m_currDirStartID);
+    uint8_t *pos = find(oldName);
     if (pos == nullptr)
         return false;
     DEntry_t entry(pos, 32);

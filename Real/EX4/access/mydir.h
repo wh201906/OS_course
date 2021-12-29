@@ -15,11 +15,12 @@ public:
     MyDir_t(MyFAT32 &partition);
     bool open(MyFAT32 &partition);
     uint64_t ls();
-    bool cd(char *path);
+    bool cd(const char *path);
     uint32_t pwd(char *result); // return the length of path, '\0' excluded.
     // find DEntry_t by name in current directory
     // return the address of DEntry_t, or nullptr if not found
     uint8_t *find(const char *name, uint32_t DirID, uint8_t attr = DEntry_t::Directory | DEntry_t::Archive);
+    uint8_t *find(const char *name, uint8_t attr = DEntry_t::Directory | DEntry_t::Archive) { return find(name, m_currDirStartID, attr); }
     // find next free DEntry
     uint8_t *findFree(uint32_t DirID);
     bool mkdir(const char *name);
