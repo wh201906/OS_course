@@ -16,7 +16,9 @@ int main()
     MyDir_t dir(fat32);
     while (1)
     {
-        putchar('>');
+        char currPath[128];
+        dir.pwd(currPath);
+        printf("%s>", currPath);
         scanf("%s", cmd);
         if (strcmp(cmd, "ls") == 0)
         {
@@ -27,6 +29,11 @@ int main()
             scanf("%s", targetPath);
             printf("target:%s\n", targetPath);
             printf("cd:%u\n", dir.cd(targetPath));
+        }
+        else if (strcmp(cmd, "pwd") == 0)
+        {
+            dir.pwd(currPath);
+            printf("%s\n", currPath);
         }
         else if (strcmp(cmd, "q") == 0 || strcmp(cmd, "quit") == 0 || strcmp(cmd, "exit") == 0)
         {
