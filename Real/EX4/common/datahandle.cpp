@@ -1,5 +1,6 @@
 #include "datahandle.h"
 #include "mycommon.h"
+#include "myutil.h"
 
 bool DataHandle::load(const char *filename, uint64_t srcOffset, uint64_t len)
 {
@@ -103,15 +104,7 @@ void DataHandle::showHex(uint64_t len)
     }
     else
     {
-        for (uint64_t i = 0; i < len; i++)
-        {
-            printf("%02x ", *(m_data + i));
-            if (i % 16 == 15)
-                printf("\n");
-            else if (i % 8 == 7)
-                printf("  ");
-        }
-        printf("\n");
+        printHex(m_data, len);
     }
 }
 

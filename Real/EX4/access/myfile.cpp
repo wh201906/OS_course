@@ -18,6 +18,7 @@ bool MyFile_t::linkPartition(MyFAT32 &partition)
     m_fat = m_partition.FAT(0);
     m_rootDirStartID = *m_bpb.rootDirClustId();
     m_partitionOpened = true;
+    m_fileOpened = false;
     return true;
 }
 
@@ -49,5 +50,50 @@ bool MyFile_t::open(const char *path)
         currID = *m_fat.item(currID);
         clusterChain.push_back(currID);
     }
+    m_fileOpened = true;
     return true;
+}
+
+uint64_t MyFile_t::read(uint8_t *buf, uint64_t offset, uint64_t len)
+{
+    // data(head is always aligned):
+    // |-cluster-|...|-cluster-|...|-cluster-|
+    // |-cluster-|...|-cluster-|...|----|
+    // read:
+    // |-----offset-----|---required----|
+    if (!m_fileOpened)
+        return false;
+    uint64_t currLen;
+    uint32_t currIdx;
+    uint8_t *data;
+    // get actural valid length
+    currLen = fileSize - offset;
+    currLen = currLen < len ? currLen : len;
+    len = currLen;
+    // find first clust by offset
+    currIdx = offset / m_bpb.bytesPerClust();
+
+    uint64_t headOffset = offset % m_bpb.bytesPerClust();
+    if (headOffset != 0) // head not aligned
+    {
+        uint64_t headLen = m_bpb.bytesPerClust() - headOffset;
+        headLen = headLen < currLen ? headLen : currLen;
+        data = m_dataCluster.cluster(clusterChain[currIdx++]);
+        memcpy(buf, data + headOffset, headLen);
+        currLen -= headLen;
+        buf += headLen;
+    }
+    while (currLen > m_bpb.bytesPerClust()) // complete cluster
+    {
+        data = m_dataCluster.cluster(clusterChain[currIdx++]);
+        memcpy(buf, data, m_bpb.bytesPerClust());
+        currLen -= m_bpb.bytesPerClust();
+        buf += m_bpb.bytesPerClust();
+    }
+    if (currLen > 0) // tail not aligned
+    {
+        data = m_dataCluster.cluster(clusterChain[currIdx]);
+        memcpy(buf, data, currLen);
+    }
+    return len;
 }

@@ -9,5 +9,6 @@
 CHS_t LBA2CHS(uint64_t LBA);
 uint64_t CHS2LBA(CHS_t CHS);
 std::vector<std::string> split(const char *str, const char *splitter);
+void printHex(uint8_t *data, uint64_t len);
 
 #endif

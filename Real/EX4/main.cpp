@@ -8,6 +8,7 @@
 
 char path[256];
 char cmd[256];
+uint8_t buf[4096];
 
 int main()
 {
@@ -70,6 +71,14 @@ int main()
                 strcat(cmd, path);
                 printf("open:%u\n", file.open(cmd));
             }
+        }
+        else if (strcmp(cmd, "read") == 0)
+        {
+            uint64_t len, offset;
+            scanf("%llu%llu", &offset, &len);
+            len = file.read(buf, offset, len);
+            printf("read:%llu\n", len);
+            printHex(buf, len);
         }
         else if (strcmp(cmd, "q") == 0 || strcmp(cmd, "quit") == 0 || strcmp(cmd, "exit") == 0)
         {
