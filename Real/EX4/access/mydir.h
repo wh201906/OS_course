@@ -25,7 +25,8 @@ public:
     uint8_t *findFree(uint32_t DirID);
     bool mkdir(const char *name);
     bool mkfile(const char *name, uint32_t size);
-    bool rename(const char *oldName, const char *newName);
+    bool rename(const char *oldName, const char *newName); // in-place rename, because this FAT32 implementation only supports short filename
+    bool remove(const char *name); // remove file/directory in the current directory by name
 
 private:
     bool m_opened = false;
@@ -37,9 +38,10 @@ private:
     uint32_t m_currDirStartID;
     std::vector<std::string> currPath;
 
-    // helper function of find
+    // helper functions
     uint8_t *findHelper(uint32_t DirID, std::function<bool(DEntry_t &)> cond, bool checkValidity = true);
     bool mkHelper(const char *name, std::function<void(DEntry_t &, uint32_t)> proc);
+    void removeOne(DEntry_t &entry);
 };
 
 #endif

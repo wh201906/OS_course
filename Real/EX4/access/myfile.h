@@ -15,8 +15,8 @@ public:
     uint64_t open(const char *path);
     uint64_t read(uint8_t *buf, uint64_t offset, uint64_t len);
     uint64_t write(uint8_t *buf, uint64_t offset, uint64_t len);
-    uint64_t size() { return (m_fileOpened ? fileSize : 0); }
-    bool resize(uint64_t newSize);
+    uint32_t size() { return (m_fileOpened ? *m_entry.size() : 0); }
+    bool resize(uint32_t newSize);
 
 private:
     bool m_partitionOpened = false;
@@ -25,10 +25,10 @@ private:
     DataCluster_t m_dataCluster;
     FAT_t m_fat;
     BPB_t m_bpb;
+    DEntry_t m_entry;
     uint32_t m_rootDirStartID;
     uint32_t m_currFileStartID;
     std::vector<uint32_t> clusterChain;
-    uint64_t fileSize = 0;
 };
 
 #endif

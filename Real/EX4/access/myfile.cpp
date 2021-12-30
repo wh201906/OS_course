@@ -41,9 +41,8 @@ uint64_t MyFile_t::open(const char *path)
     if (entryPtr == nullptr)
         return 0;
     clusterChain.clear();
-    DEntry_t entry(entryPtr, 32);
-    fileSize = *entry.size();
-    uint32_t currID = entry.getClusterId();
+    m_entry = DEntry_t(entryPtr, 32);
+    uint32_t currID = m_entry.getClusterId();
     clusterChain.push_back(currID);
     while (m_fat.isItemValid(*m_fat.item(currID)))
     {
@@ -51,7 +50,7 @@ uint64_t MyFile_t::open(const char *path)
         clusterChain.push_back(currID);
     }
     m_fileOpened = true;
-    return fileSize;
+    return *m_entry.size();
 }
 
 uint64_t MyFile_t::read(uint8_t *buf, uint64_t offset, uint64_t len)
@@ -67,7 +66,7 @@ uint64_t MyFile_t::read(uint8_t *buf, uint64_t offset, uint64_t len)
     uint32_t currIdx;
     uint8_t *data;
     // get actural valid length
-    currLen = fileSize - offset;
+    currLen = *m_entry.size() - offset;
     currLen = currLen < len ? currLen : len;
     len = currLen;
     // find first clust by offset
@@ -106,7 +105,7 @@ uint64_t MyFile_t::write(uint8_t *buf, uint64_t offset, uint64_t len)
     uint32_t currIdx;
     uint8_t *data;
     // get actural valid length
-    currLen = fileSize - offset;
+    currLen = *m_entry.size() - offset;
     currLen = currLen < len ? currLen : len;
     len = currLen;
     // find first clust by offset
@@ -135,4 +134,41 @@ uint64_t MyFile_t::write(uint8_t *buf, uint64_t offset, uint64_t len)
         memcpy(data, buf, currLen);
     }
     return len;
+}
+
+bool MyFile_t::resize(uint32_t newSize)
+{
+    if (newSize == *m_entry.size())
+        return true;
+    else if (newSize < *m_entry.size()) // shrink
+    {
+        uint64_t newClusterNum = newSize / m_bpb.bytesPerClust();
+        if (newClusterNum == 0)
+            newClusterNum == 1; // allocate at least one cluster even the size is 0
+        while (clusterChain.size() > newClusterNum)
+        {
+            *m_fat.item(clusterChain.back()) = FAT_t::ItemFree;
+            clusterChain.pop_back();
+        }
+    }
+    else // enlarge
+    {
+        uint64_t newClusterNum = newSize / m_bpb.bytesPerClust();
+        if (m_fat.freeNum() < newClusterNum - clusterChain.size())
+            return false;
+        while (clusterChain.size() < newClusterNum)
+        {
+            uint32_t id;
+            uint8_t *pos;
+            id = m_fat.nextFree();
+            *m_fat.item(clusterChain.back()) = id;
+            *m_fat.item(id) = FAT_t::ItemEnd;
+            pos = m_dataCluster.cluster(id);
+            for (uint64_t i = 0; i < m_bpb.bytesPerClust(); i++) // clear new cluster
+                *(pos + i) = 0x00;
+            clusterChain.push_back(id);
+        }
+    }
+    *m_entry.size() = newSize;
+    return true;
 }

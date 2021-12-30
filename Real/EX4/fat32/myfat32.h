@@ -19,13 +19,15 @@ public:
     //data
     DBR_t DBR() { return DBR_t(m_data, BPS); }
     FSInfo_t FSInfo() { return FSInfo_t(m_data + BPS, BPS); } // the backup FSInfo sector is not used.
-    FAT_t FAT(uint8_t id); // id start from 0
+    FAT_t FAT(uint8_t id);                                    // id start from 0
     DataCluster_t DataCluster();
 
     // operations
     bool isValid() override;
     void info() override;
     bool format(uint8_t secPerClust = 1, bool fastMode = true);
+    bool syncFAT(uint8_t src, uint8_t dst);
+    bool syncFAT() { return syncFAT(0, 1); }
 };
 
 #endif

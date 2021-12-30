@@ -106,3 +106,16 @@ bool MyFAT32::format(uint8_t secPerClust, bool fastMode)
 
     return true;
 }
+
+bool MyFAT32::syncFAT(uint8_t src, uint8_t dst)
+{
+    if (!MyPartition::isValid())
+        return false;
+    FAT_t srcFAT = FAT(src);
+    FAT_t dstFAT = FAT(dst);
+    BPB_t bpb = DBR().BPB();
+    if (!bpb.isValid())
+        return false;
+    memcpy(dstFAT.data(), srcFAT.data(), *bpb.FATSize() * *bpb.bytesPerSec());
+    return true;
+}

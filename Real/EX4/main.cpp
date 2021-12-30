@@ -9,12 +9,22 @@
 char path[256];
 char cmd[256];
 uint8_t buf[4096];
+uint64_t diskLen;
 
 int main()
 {
     MyDisk disk;
     MyPartition part;
-    disk.load("E:\\test\\disk1.img", 0, 512 * 8192 * 16);
+    bool opened = false;
+    while (!opened)
+    {
+        printf("Disk File:\n");
+        scanf("%s", path);
+        printf("Disk size(bytes):\n");
+        scanf("%llu", &diskLen);
+        opened = disk.load(path, 0, diskLen);
+    }
+
     part = disk.partition(0);
     MyFAT32 fat32(part, 0, 0);
     MyDir_t dir(fat32);
@@ -94,8 +104,28 @@ int main()
             len = file.write(buf, offset, strlen((char *)buf));
             printf("write:%llu\n", len);
         }
+        else if (strcmp(cmd, "resize") == 0)
+        {
+            uint64_t len;
+            scanf("%u", &len);
+            printf("resize:%u\n", file.resize(len));
+        }
+        else if (strcmp(cmd, "remove") == 0 || strcmp(cmd, "rm") == 0)
+        {
+            scanf("%s", path);
+            printf("remove:%u\n", dir.remove(path));
+        }
+        else if (strcmp(cmd, "info") == 0)
+        {
+            fat32.info();
+        }
+        else if(strcmp(cmd, "format") == 0)
+        {
+            fat32.format();
+        }
         else if (strcmp(cmd, "q") == 0 || strcmp(cmd, "quit") == 0 || strcmp(cmd, "exit") == 0)
         {
+            fat32.syncFAT();
             break;
         }
     }

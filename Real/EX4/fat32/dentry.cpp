@@ -8,7 +8,9 @@ void DEntry_t::info()
 
 bool DEntry_t::isValid()
 {
-    return DataHandle::isValid() && m_data[0] != '\x00' && m_data[0] != ' ' && m_data[0] != '\xE5' && (!!(*attribute() & Directory)) ^ (*size() != 0);
+    // use 0xE5 rather than '\xE5' there
+    // '\xE5' will be converted into int first
+    return DataHandle::isValid() && m_data[0] != '\x00' && m_data[0] != ' ' && m_data[0] != 0xE5 && (!!(*attribute() & Directory)) ^ (*size() != 0);
 }
 
 bool DEntry_t::init(uint8_t attr)

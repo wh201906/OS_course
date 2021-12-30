@@ -1,6 +1,6 @@
 #include "mydir.h"
 #include "myutil.h"
-#include <stack>
+#include <queue>
 
 MyDir_t::MyDir_t(MyFAT32 &partition) : m_partition(partition)
 {
@@ -132,8 +132,7 @@ uint8_t *MyDir_t::findHelper(uint32_t DirID, std::function<bool(DEntry_t &)> con
 uint8_t *MyDir_t::find(const char *name, uint32_t DirID, uint8_t attr)
 {
     return findHelper(DirID,
-                      [&](DEntry_t &entry) -> bool
-                      {
+                      [&](DEntry_t &entry) -> bool {
                           char currName[13];
                           entry.fullName(currName);
                           return (strcmp(currName, name) == 0 && *entry.attribute() & attr);
@@ -144,8 +143,7 @@ uint8_t *MyDir_t::findFree(uint32_t DirID)
 {
     return findHelper(
         DirID,
-        [&](DEntry_t &entry) -> bool
-        {
+        [&](DEntry_t &entry) -> bool {
             return entry.DataHandle::isValid() && !entry.isValid();
         },
         false);
@@ -214,8 +212,7 @@ bool MyDir_t::mkdir(const char *name)
 {
     return mkHelper(
         name,
-        [&](DEntry_t &entry, uint32_t id)
-        {
+        [&](DEntry_t &entry, uint32_t id) {
             // DEntry in current directory
             entry.init(DEntry_t::Directory);
             memcpy(entry.name(), name, strlen(name));
@@ -244,8 +241,7 @@ bool MyDir_t::mkfile(const char *name, uint32_t size)
 {
     return mkHelper(
         name,
-        [&](DEntry_t &entry, uint32_t id)
-        {
+        [&](DEntry_t &entry, uint32_t id) {
             // DEntry in current directory
             entry.init(DEntry_t::Archive);
             memcpy(entry.name(), name, strlen(name));
@@ -266,4 +262,71 @@ bool MyDir_t::rename(const char *oldName, const char *newName)
         return false;
     DEntry_t entry(pos, 32);
     return entry.rename(newName);
+}
+
+bool MyDir_t::remove(const char *name)
+{
+    if (!m_opened)
+        return false;
+    DEntry_t entry(find(name), 32);
+    if (!entry.isValid())
+        return false;
+    if (*entry.attribute() & DEntry_t::Directory)
+    {
+        char n[20];
+        std::queue<uint8_t *> dirQueue; // for BFS
+        std::vector<uint8_t *> dirVec;
+        dirQueue.push(entry.data());
+        while (!dirQueue.empty())
+        {
+            DEntry_t currEntry(dirQueue.front(), 32);
+            dirVec.push_back(dirQueue.front()); // BFS: access
+            dirQueue.pop();
+            // BFS: add children(direct neighbourhood)
+            uint32_t currID = currEntry.getClusterId();
+            uint8_t *d;
+            while (m_fat.isItemValid(currID))
+            {
+                d = m_dataCluster.cluster(currID);
+                for (uint64_t i = 0; i < m_bpb.bytesPerClust(); i += 32)
+                {
+                    DEntry_t childEntry(&d[i], 32);
+                    if (!childEntry.isValid())
+                        continue;
+                    else if (childEntry.name()[0] == '.')
+                        continue;
+                    else if (!(*childEntry.attribute() & DEntry_t::Directory)) // file, just remove
+                        removeOne(childEntry);
+                    else // directory, add to queue
+                        dirQueue.push(childEntry.data());
+                }
+                currID = *m_fat.item(currID);
+            }
+        }
+        for (auto it = dirVec.rbegin(); it != dirVec.rend(); it++)
+        {
+            DEntry_t currEntry(*it, 32);
+            removeOne(currEntry);
+        }
+    }
+    else
+    {
+        removeOne(entry);
+    }
+    return true;
+}
+
+void MyDir_t::removeOne(DEntry_t &entry)
+{
+    std::vector<uint32_t> idList;
+    uint32_t currID = entry.getClusterId();
+    idList.push_back(currID);
+    while (m_fat.isItemValid(*m_fat.item(currID)))
+    {
+        currID = *m_fat.item(currID);
+        idList.push_back(currID);
+    }
+    for (auto it = idList.begin(); it != idList.end(); it++)
+        *m_fat.item(*it) = FAT_t::ItemFree;
+    entry.data()[0] = 0xE5; // removed flag
 }
