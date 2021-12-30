@@ -165,13 +165,11 @@ uint32_t MyDir_t::pwd(char *result)
     return i;
 }
 
-bool MyDir_t::mkdir(const char *name)
+bool MyDir_t::mkHelper(const char *name, std::function<void(DEntry_t &, uint32_t)> proc)
 {
-    size_t len;
     if (!m_opened)
         return false;
-    len = strlen(name);
-    if (len > 8)
+    if (strlen(name) > 8)
         return false;
     if (find(name))
         return false;
@@ -191,27 +189,7 @@ bool MyDir_t::mkdir(const char *name)
         // unexpected
         return false;
     }
-    // DEntry in current directory
-    newEntry.init(DEntry_t::Directory);
-    memcpy(newEntry.name(), name, len);
-    newEntry.setClusterId(id);
-    pos = m_dataCluster.cluster(id);
-    // FAT Item
-    *m_fat.item(id) = FAT_t::ItemEnd;
-    // DEntry in new directory
-    newEntry = DEntry_t(pos, 32);
-    newEntry.init(DEntry_t::Directory);
-    newEntry.name()[0] = '.';
-    newEntry.setClusterId(id);
-    newEntry = DEntry_t(pos + 32, 32);
-    newEntry.init(DEntry_t::Directory);
-    memcpy(newEntry.name(), "..", 2);
-    newEntry.setClusterId(m_currDirStartID);
-    // clean up new cluster
-    // set the first byte of every 32 bytes to 0x00
-    // so DEntry_t::isValid() will return false for unused DEntry
-    for (uint64_t i = 64; i < m_bpb.bytesPerClust(); i += 32)
-        *(pos + i) = 0x00;
+    proc(newEntry, id);
     // allocate new cluster if current directory is full
     if (findFree(m_currDirStartID) == nullptr)
     {
@@ -230,6 +208,52 @@ bool MyDir_t::mkdir(const char *name)
             *(pos + i) = 0x00;
     }
     return true;
+}
+
+bool MyDir_t::mkdir(const char *name)
+{
+    return mkHelper(
+        name,
+        [&](DEntry_t &entry, uint32_t id)
+        {
+            // DEntry in current directory
+            entry.init(DEntry_t::Directory);
+            memcpy(entry.name(), name, strlen(name));
+            entry.setClusterId(id);
+            // FAT Item
+            *m_fat.item(id) = FAT_t::ItemEnd;
+            // DEntry in new directory
+            uint8_t *pos = m_dataCluster.cluster(id);
+            DEntry_t newEntry(pos, 32);
+            newEntry.init(DEntry_t::Directory);
+            newEntry.name()[0] = '.';
+            newEntry.setClusterId(id);
+            newEntry = DEntry_t(pos + 32, 32);
+            newEntry.init(DEntry_t::Directory);
+            memcpy(newEntry.name(), "..", 2);
+            newEntry.setClusterId(m_currDirStartID);
+            // clean up new cluster
+            // set the first byte of every 32 bytes to 0x00
+            // so DEntry_t::isValid() will return false for unused DEntry
+            for (uint64_t i = 64; i < m_bpb.bytesPerClust(); i += 32)
+                *(pos + i) = 0x00;
+        });
+}
+
+bool MyDir_t::mkfile(const char *name, uint32_t size)
+{
+    return mkHelper(
+        name,
+        [&](DEntry_t &entry, uint32_t id)
+        {
+            // DEntry in current directory
+            entry.init(DEntry_t::Archive);
+            memcpy(entry.name(), name, strlen(name));
+            entry.setClusterId(id);
+            *entry.size() = size;
+            // FAT Item
+            *m_fat.item(id) = FAT_t::ItemEnd;
+        });
 }
 
 bool MyDir_t::rename(const char *oldName, const char *newName)

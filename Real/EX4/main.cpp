@@ -48,6 +48,13 @@ int main()
             printf("target:%s\n", path);
             printf("mkdir:%u\n", dir.mkdir(path));
         }
+        else if (strcmp(cmd, "mkfile") == 0)
+        {
+            uint32_t len;
+            scanf("%s%u", path, &len);
+            printf("target:%s\n", path);
+            printf("mkfile:%u\n", dir.mkfile(path, len));
+        }
         else if (strcmp(cmd, "rename") == 0)
         {
             scanf("%s", path);
@@ -79,6 +86,13 @@ int main()
             len = file.read(buf, offset, len);
             printf("read:%llu\n", len);
             printHex(buf, len);
+        }
+        else if (strcmp(cmd, "write") == 0)
+        {
+            uint64_t offset, len;
+            scanf("%llu%s", &offset, buf);
+            len = file.write(buf, offset, strlen((char *)buf));
+            printf("write:%llu\n", len);
         }
         else if (strcmp(cmd, "q") == 0 || strcmp(cmd, "quit") == 0 || strcmp(cmd, "exit") == 0)
         {

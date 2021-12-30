@@ -24,6 +24,7 @@ public:
     // find next free DEntry
     uint8_t *findFree(uint32_t DirID);
     bool mkdir(const char *name);
+    bool mkfile(const char *name, uint32_t size);
     bool rename(const char *oldName, const char *newName);
 
 private:
@@ -38,6 +39,7 @@ private:
 
     // helper function of find
     uint8_t *findHelper(uint32_t DirID, std::function<bool(DEntry_t &)> cond, bool checkValidity = true);
+    bool mkHelper(const char *name, std::function<void(DEntry_t &, uint32_t)> proc);
 };
 
 #endif
