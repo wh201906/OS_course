@@ -13,6 +13,7 @@ public:
     MyFile_t(MyFAT32 &partition);
     bool linkPartition(MyFAT32 &partition);
     uint64_t open(const char *path);
+    uint64_t open(uint8_t *entry);
     uint64_t read(uint8_t *buf, uint64_t offset, uint64_t len);
     uint64_t write(uint8_t *buf, uint64_t offset, uint64_t len);
     uint32_t size() { return (m_fileOpened ? *m_entry.size() : 0); }

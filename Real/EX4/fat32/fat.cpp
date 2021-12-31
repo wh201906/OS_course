@@ -44,3 +44,20 @@ uint64_t FAT_t::freeNum()
     }
     return f;
 }
+
+void FAT_t::showFAT(uint64_t len)
+{
+    for (uint8_t i = 0; i < 16; i++)
+        printf("%10x ", i);
+    printf("\n");
+    for (uint8_t i = 0; i < 16; i++)
+        printf("-----------");
+    printf("\n");
+    for (uint64_t i = 0; i < len; i++)
+    {
+        printf("0x%08x ", *((uint32_t *)m_data + i));
+        if (i % 16 == 15)
+            printf("\n");
+    }
+    printf("\n");
+}

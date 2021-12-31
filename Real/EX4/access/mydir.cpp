@@ -1,6 +1,7 @@
 #include "mydir.h"
 #include "myutil.h"
 #include <queue>
+#include "myfile.h"
 
 MyDir_t::MyDir_t(MyFAT32 &partition) : m_partition(partition)
 {
@@ -32,6 +33,7 @@ uint64_t MyDir_t::ls()
     uint64_t result = 0;
     uint32_t currID = m_currDirStartID;
     uint8_t *d;
+    printf("      Size Name\n");
     while (m_fat.isItemValid(currID))
     {
         d = m_dataCluster.cluster(currID);
@@ -42,7 +44,10 @@ uint64_t MyDir_t::ls()
             if (!entry.isValid())
                 continue;
             entry.fullName(filename);
-            printf("%s\n", filename);
+            if (*entry.attribute() & DEntry_t::Directory)
+                printf("     <DIR> %s\n", filename);
+            else
+                printf("%10u %s\n", *entry.size(), filename);
             result++;
         }
         currID = *m_fat.item(currID);
@@ -132,7 +137,8 @@ uint8_t *MyDir_t::findHelper(uint32_t DirID, std::function<bool(DEntry_t &)> con
 uint8_t *MyDir_t::find(const char *name, uint32_t DirID, uint8_t attr)
 {
     return findHelper(DirID,
-                      [&](DEntry_t &entry) -> bool {
+                      [&](DEntry_t &entry) -> bool
+                      {
                           char currName[13];
                           entry.fullName(currName);
                           return (strcmp(currName, name) == 0 && *entry.attribute() & attr);
@@ -143,7 +149,8 @@ uint8_t *MyDir_t::findFree(uint32_t DirID)
 {
     return findHelper(
         DirID,
-        [&](DEntry_t &entry) -> bool {
+        [&](DEntry_t &entry) -> bool
+        {
             return entry.DataHandle::isValid() && !entry.isValid();
         },
         false);
@@ -191,7 +198,7 @@ bool MyDir_t::mkHelper(const char *name, std::function<void(DEntry_t &, uint32_t
     // allocate new cluster if current directory is full
     if (findFree(m_currDirStartID) == nullptr)
     {
-        uint16_t end;
+        uint32_t end;
         id = m_fat.nextFree();
         if (id == 0)
             return true; // new directory created, but failed to allocate new cluster for current directory(full now)
@@ -208,11 +215,49 @@ bool MyDir_t::mkHelper(const char *name, std::function<void(DEntry_t &, uint32_t
     return true;
 }
 
+// NOT A bug: cannot remove first cluster
+// well, . and .. will not be removed.
+uint64_t MyDir_t::tryShrink()
+{
+    uint64_t result = 0;
+    std::vector<uint32_t> idChain;
+    uint32_t currID = m_currDirStartID;
+    idChain.push_back(currID);
+    while (m_fat.isItemValid(*m_fat.item(currID)))
+    {
+        currID = *m_fat.item(currID);
+        idChain.push_back(currID);
+    }
+    for (auto it = idChain.rbegin(); it != idChain.rend(); it++)
+    {
+        printf("id: %u\n", *it);
+        uint8_t *d = m_dataCluster.cluster(*it);
+        uint64_t i;
+        for (i = 0; i < m_bpb.bytesPerClust(); i += 32)
+        {
+            DEntry_t entry(&d[i], 32);
+            if (entry.isValid())
+                break;
+        }
+        if (i >= m_bpb.bytesPerClust()) // no valid DEntry, remove
+        {
+            auto nextIt = it + 1;
+            if (nextIt == idChain.rend())
+                break;
+            *m_fat.item(*nextIt) = *m_fat.item(*it); // link list delete
+            *m_fat.item(*it) = FAT_t::ItemFree;
+            result++;
+        }
+    }
+    return result;
+}
+
 bool MyDir_t::mkdir(const char *name)
 {
     return mkHelper(
         name,
-        [&](DEntry_t &entry, uint32_t id) {
+        [&](DEntry_t &entry, uint32_t id)
+        {
             // DEntry in current directory
             entry.init(DEntry_t::Directory);
             memcpy(entry.name(), name, strlen(name));
@@ -241,14 +286,18 @@ bool MyDir_t::mkfile(const char *name, uint32_t size)
 {
     return mkHelper(
         name,
-        [&](DEntry_t &entry, uint32_t id) {
+        [&](DEntry_t &entry, uint32_t id)
+        {
             // DEntry in current directory
             entry.init(DEntry_t::Archive);
             memcpy(entry.name(), name, strlen(name));
             entry.setClusterId(id);
-            *entry.size() = size;
+            *entry.size() = 0;
             // FAT Item
             *m_fat.item(id) = FAT_t::ItemEnd;
+            MyFile_t file(m_partition);
+            file.open(entry.data());
+            file.resize(size);
         });
 }
 
@@ -267,6 +316,8 @@ bool MyDir_t::rename(const char *oldName, const char *newName)
 bool MyDir_t::remove(const char *name)
 {
     if (!m_opened)
+        return false;
+    if (name[0] == '.')
         return false;
     DEntry_t entry(find(name), 32);
     if (!entry.isValid())
@@ -313,6 +364,7 @@ bool MyDir_t::remove(const char *name)
     {
         removeOne(entry);
     }
+    tryShrink();
     return true;
 }
 

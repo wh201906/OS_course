@@ -1,5 +1,6 @@
 #include "myfile.h"
 #include "mydir.h"
+#include "math.h"
 
 MyFile_t::MyFile_t(MyFAT32 &partition) : m_partition(partition)
 {
@@ -42,6 +43,21 @@ uint64_t MyFile_t::open(const char *path)
         return 0;
     clusterChain.clear();
     m_entry = DEntry_t(entryPtr, 32);
+    uint32_t currID = m_entry.getClusterId();
+    clusterChain.push_back(currID);
+    while (m_fat.isItemValid(*m_fat.item(currID)))
+    {
+        currID = *m_fat.item(currID);
+        clusterChain.push_back(currID);
+    }
+    m_fileOpened = true;
+    return *m_entry.size();
+}
+
+uint64_t MyFile_t::open(uint8_t *entry)
+{
+    clusterChain.clear();
+    m_entry = DEntry_t(entry, 32);
     uint32_t currID = m_entry.getClusterId();
     clusterChain.push_back(currID);
     while (m_fat.isItemValid(*m_fat.item(currID)))
@@ -142,18 +158,21 @@ bool MyFile_t::resize(uint32_t newSize)
         return true;
     else if (newSize < *m_entry.size()) // shrink
     {
-        uint64_t newClusterNum = newSize / m_bpb.bytesPerClust();
+        uint64_t newClusterNum = ceil((double)newSize / m_bpb.bytesPerClust());
         if (newClusterNum == 0)
-            newClusterNum == 1; // allocate at least one cluster even the size is 0
+            newClusterNum = 1; // allocate at least one cluster even the size is 0
         while (clusterChain.size() > newClusterNum)
         {
             *m_fat.item(clusterChain.back()) = FAT_t::ItemFree;
             clusterChain.pop_back();
+            *m_fat.item(clusterChain.back()) = FAT_t::ItemEnd;
         }
     }
     else // enlarge
     {
-        uint64_t newClusterNum = newSize / m_bpb.bytesPerClust();
+        uint64_t newClusterNum = ceil((double)newSize / m_bpb.bytesPerClust());
+        if (newClusterNum == 0)
+            newClusterNum = 1; // allocate at least one cluster even the size is 0
         if (m_fat.freeNum() < newClusterNum - clusterChain.size())
             return false;
         while (clusterChain.size() < newClusterNum)

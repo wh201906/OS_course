@@ -39,7 +39,7 @@ public:
     void info() override;
 
 private:
-    uint64_t m_SPC; // sector per cluster
+
 };
 
 #endif

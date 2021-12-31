@@ -26,6 +26,7 @@ public:
     uint64_t num() { return (m_len / 4); } // the first 2 item is calculated
     uint64_t freeNum();
     bool isItemValid(uint32_t item) { return (item > ItemFree && item < ItemBad); }
+    void showFAT(uint64_t len);
 };
 
 #endif
