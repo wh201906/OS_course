@@ -382,3 +382,52 @@ void MyDir_t::removeOne(DEntry_t &entry)
         *m_fat.item(*it) = FAT_t::ItemFree;
     entry.data()[0] = 0xE5; // removed flag
 }
+
+bool MyDir_t::move(const char *oldPath, const char *newPath)
+{
+    char currPath[PATHLEN];
+    uint8_t *oldEntryPtr;
+    uint8_t *newEntryPtr;
+    MyDir_t dir(m_partition);
+    size_t slashPos;
+    std::string pathStr;
+    std::string nameStr;
+
+    pwd(currPath);
+    // find old entry
+    pathStr = std::string(oldPath);
+    slashPos = pathStr.rfind('/');
+    nameStr = pathStr.substr(slashPos + 1);
+    pathStr.erase(slashPos + 1);
+    dir.cd(currPath); // start from current directory
+    if (!dir.cd(pathStr.c_str()))
+        return false;
+    oldEntryPtr = dir.find(nameStr.c_str());
+    if (oldEntryPtr == nullptr)
+        return false;
+
+    // find new entry
+    pathStr = std::string(newPath);
+    dir.cd(currPath); // start from current directory
+    if (!dir.cd(pathStr.c_str()))
+        return false;
+    uint32_t newParentID = dir.currDirStartID();
+
+    if (!dir.mkHelper(
+            "",
+            [&](DEntry_t &entry, uint32_t id)
+            {
+                memcpy(entry.data(), oldEntryPtr, 32);
+                if(*entry.attribute() & DEntry_t::Directory) // directory, modify ".."
+                {
+                    dir.cd(nameStr.c_str());
+                    DEntry_t newEntry(dir.find("..", (uint8_t)DEntry_t::Directory), 32);
+                    newEntry.setClusterId(newParentID);
+                }
+            }))
+    {
+        return false;
+    }
+    *oldEntryPtr = 0xE5;
+    return true;
+}

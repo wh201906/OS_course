@@ -21,15 +21,15 @@ public:
     // return the address of DEntry_t, or nullptr if not found
     uint8_t *find(const char *name, uint32_t DirID, uint8_t attr = DEntry_t::Directory | DEntry_t::Archive);
     uint8_t *find(const char *name, uint8_t attr = DEntry_t::Directory | DEntry_t::Archive) { return find(name, m_currDirStartID, attr); }
-    uint8_t *recursiveFind(const char *path, uint32_t DirID, uint8_t attr);
     // find next free DEntry
     uint8_t *findFree(uint32_t DirID);
     bool mkdir(const char *name);
     bool mkfile(const char *name, uint32_t size);
     bool rename(const char *oldName, const char *newName); // in-place rename, because this FAT32 implementation only supports short filename
     bool remove(const char *name); // remove file/directory in the current directory by name
-    bool move(const char *oldPath, const char *newPath);
+    bool move(const char *oldPath, const char *newPath); // newPath doesn't contain the new name.
     uint64_t tryShrink();
+    uint32_t currDirStartID() { return m_currDirStartID; }
 
 private:
     bool m_opened = false;

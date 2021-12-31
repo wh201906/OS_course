@@ -11,6 +11,8 @@
 // bytes per sector
 #define BPS 512
 
+#define PATHLEN 256
+
 struct CHS_t
 {
     uint64_t C;

@@ -6,8 +6,8 @@
 #include "mydir.h"
 #include "myfile.h"
 
-char buf1[256], buf2[256];
-char path[256];
+char buf1[PATHLEN], buf2[PATHLEN];
+char path[PATHLEN];
 char cmd[256];
 uint8_t buf[4096];
 uint64_t diskLen;
@@ -146,6 +146,12 @@ int main()
             scanf("%u", &len);
             printf("FAT hex data:\n");
             fat32.FAT(0).showFAT(len);
+        }
+        else if(strcmp(cmd, "move") == 0 || strcmp(cmd, "mv") == 0)
+        {
+            scanf("%s", buf1);
+            scanf("%s", buf2);
+            printf("move:%u\n", dir.move(buf1, buf2));
         }
         else if (strcmp(cmd, "q") == 0 || strcmp(cmd, "quit") == 0 || strcmp(cmd, "exit") == 0)
         {
