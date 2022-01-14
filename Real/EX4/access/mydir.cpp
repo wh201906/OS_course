@@ -230,7 +230,6 @@ uint64_t MyDir_t::tryShrink()
     }
     for (auto it = idChain.rbegin(); it != idChain.rend(); it++)
     {
-        printf("id: %u\n", *it);
         uint8_t *d = m_dataCluster.cluster(*it);
         uint64_t i;
         for (i = 0; i < m_bpb.bytesPerClust(); i += 32)

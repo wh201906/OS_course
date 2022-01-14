@@ -22,6 +22,6 @@
         簇ID转换为簇地址  
 + 访问器  
     + 目录访问器  
-        ls, cd, pwd, find, mkdir, mkfile, rename, remove  
+        ls, cd, pwd, find, mkdir, mkfile, rename, remove, move  
     + 文件访问器  
         open, read, write, resize  
