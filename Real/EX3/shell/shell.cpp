@@ -1,23 +1,28 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <sys/wait.h>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <vector>
 #include <regex>
+#include <map>
 
 #define PATHLEN 256
-std::vector<std::string> allowList = {"find", "grep", "ls", "pwd"};
+std::vector<std::string> allowList = {"find", "grep", "ls", "pwd", "sleep"};
+std::map<std::string, std::string> cmdMap{{"about", "./1.out"}, {"test", "./2.out"}, {"mysleep", "./3.out"}};
+std::string cmd, path;
+std::vector<std::string> args;
 
-void rainbow(const char *str);
-std::vector<std::string> split(std::string str, std::string splitter);
+void rainbow(const char *str);                                         // show something with different color
+std::vector<std::string> split(std::string str, std::string splitter); // split a string
+void runCMD();                                                         // fork a new process then run the command with arguments(based on args[])
 
 int main()
 {
-    std::string cmd, path;
-    std::vector<std::string> args;
     bool flag = true;
+    auto mapped = cmdMap.cbegin();
 
     rainbow("A simple shell\n");
     path.resize(PATHLEN);
@@ -33,9 +38,10 @@ int main()
         getline(std::cin, cmd);
         args.clear();
         args = split(cmd, " ");
-        if (args[0] == "exit")
+        mapped = cmdMap.find(args[0]);
+        if (args[0] == "exit" || args[0] == "quit") // quit
             flag = 0;
-        else if (args[0] == "cd")
+        else if (args[0] == "cd") // cd, use external cd and pwd command as helpers
         {
             size_t pos;
             std::string tmp;
@@ -48,25 +54,12 @@ int main()
             chdir(tmp.c_str());
             pclose(handle);
         }
-        else if (args[0] == "about")
+        else if (mapped != cmdMap.cend()) // mapped commands, "mapped" is updated when the shell reads a line
         {
-            std::string tmp;
-            tmp = "./1.out";
-            system(tmp.c_str());
+            args[0] = mapped->second;
+            runCMD();
         }
-        else if (args[0] == "test")
-        {
-            std::string tmp;
-            tmp = "./2.out";
-            system(tmp.c_str());
-        }
-        else if (args[0] == "mysleep")
-        {
-            std::string tmp;
-            tmp = "./3.out " + args[1];
-            system(tmp.c_str());
-        }
-        else
+        else // other commands
         {
             bool executed = false;
             for (auto it = allowList.cbegin(); it != allowList.cend(); it++)
@@ -74,7 +67,7 @@ int main()
                 if (args[0] == *it)
                 {
                     executed = true;
-                    system(cmd.c_str());
+                    runCMD();
                     break;
                 }
             }
@@ -109,4 +102,25 @@ std::vector<std::string> split(std::string str, std::string splitter)
 {
     std::regex re(splitter);
     return std::vector<std::string>(std::sregex_token_iterator(str.begin(), str.end(), re, -1), std::sregex_token_iterator());
+}
+
+void runCMD()
+{
+    pid_t childPid;
+    if ((childPid = fork()) == 0)
+    {
+        const char **argList = new const char *[args.size() + 1];
+        argList[args.size()] = nullptr;
+        for (size_t i = 0; i < args.size(); i++)
+        {
+            argList[i] = args[i].c_str();
+        }
+        execvp(argList[0], (char *const *)argList);
+        delete[] argList;
+        exit(0);
+    }
+    else
+    {
+        waitpid(childPid, nullptr, 0);
+    }
 }
